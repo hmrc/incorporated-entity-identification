@@ -21,10 +21,12 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.Writes
+import play.api.libs.json.{JsObject, Writes}
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.incorporatedentityidentification.repositories.IncorporatedEntityIdentificationRepository
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with CustomMatchers
@@ -56,6 +58,8 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
 
+  lazy val repo: IncorporatedEntityIdentificationRepository = app.injector.instanceOf[IncorporatedEntityIdentificationRepository]
+
   override def beforeAll(): Unit = {
     startWiremock()
     super.beforeAll()
@@ -68,6 +72,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   override def beforeEach(): Unit = {
     resetWiremock()
+    await(repo.drop)
     super.beforeEach()
   }
 
@@ -75,12 +80,11 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     await(buildClient(uri).withHttpHeaders().get)
   }
 
-  def post(uri: String)(form: (String, String)*): WSResponse = {
-    val formBody = (form map { case (k, v) => (k, Seq(v)) }).toMap
+  def post[T](uri: String)(body: T)(implicit writes: Writes[T]): WSResponse = {
     await(
       buildClient(uri)
-        .withHttpHeaders("Csrf-Token" -> "nocheck")
-        .post(formBody)
+        .withHttpHeaders("Content-Type" -> "application/json")
+        .post(writes.writes(body).toString())
     )
   }
 

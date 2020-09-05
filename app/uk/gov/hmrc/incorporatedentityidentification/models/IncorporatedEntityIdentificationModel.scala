@@ -16,15 +16,22 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
 
 
-case class IncorporatedEntityIdentificationModel(companyNumber: String,
-                                                 companyName: String,
-                                                 ctutr: String)
+case class IncorporatedEntityIdentificationModel(journeyId: String)
 
 object IncorporatedEntityIdentificationModel {
-  implicit val format: OFormat[IncorporatedEntityIdentificationModel] = Json.format[IncorporatedEntityIdentificationModel]
+  implicit object MongoFormat extends OFormat[IncorporatedEntityIdentificationModel] {
+    override def writes(o: IncorporatedEntityIdentificationModel): JsObject =
+      Json.obj("_id" -> o.journeyId)
+
+    override def reads(json: JsValue): JsResult[IncorporatedEntityIdentificationModel] =
+      for {
+        journeyId <- (json \ "_id").validate[String]
+      } yield IncorporatedEntityIdentificationModel(journeyId)
+  }
+
 }
 
 

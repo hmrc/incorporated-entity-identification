@@ -17,16 +17,12 @@
 package uk.gov.hmrc.incorporatedentityidentification.repositories
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{Format, JsObject, Json, Writes}
+import play.api.libs.json.Format
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.UpdateWriteResult
-import reactivemongo.play.json.JSONSerializationPack.Reader
-import reactivemongo.play.json.JsObjectDocumentWriter
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
-import uk.gov.hmrc.incorporatedentityidentification.repositories.IncorporatedEntityIdentificationRepository._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class IncorporatedEntityIdentificationRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent)
@@ -34,37 +30,8 @@ class IncorporatedEntityIdentificationRepository @Inject()(reactiveMongoComponen
   extends ReactiveRepository(
     collectionName = "incorporated-entity-identification",
     mongo = reactiveMongoComponent.mongoConnector.db,
-    domainFormat = IncorporatedEntityIdentificationModel.format,
+    domainFormat = IncorporatedEntityIdentificationModel.MongoFormat,
     idFormat = implicitly[Format[String]]
-  ) {
+  )
 
-  def upsert[T](journeyId: String, key: String, updates: T)
-               (implicit writes: Writes[T]): Future[UpdateWriteResult] =
-    collection.update(ordered = false).one(
-      q = Json.obj(idKey -> journeyId),
-      u = Json.obj(fields = "$set" -> Json.obj(key -> updates)),
-      upsert = true
-    ).filter(_.n == 1)
-
-  def retrieve[T](journeyId: String, key: String)(implicit reads: Reader[T]): Future[Option[T]] =
-    collection.find(
-      selector = Json.obj(
-        idKey -> journeyId
-      ),
-      projection = Some(
-        Json.obj(
-          idKey -> 0,
-          key -> 1
-        )
-      )
-    ).one[JsObject].map(
-      _.map(
-        js => (js \ key).as[T]
-      )
-    )
-}
-
-object IncorporatedEntityIdentificationRepository {
-  val idKey = "_id"
-}
 
