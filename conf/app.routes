@@ -1,3 +1,4 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.incorporatedentityidentification.controllers.MicroserviceHelloWorldController.hello
+POST        /journey            uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyIdController.createJourney()
+
