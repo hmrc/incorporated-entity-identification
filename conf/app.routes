@@ -1,4 +1,6 @@
 # microservice specific routes
 
-POST        /journey            uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyIdController.createJourney()
+POST        /journey                    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyIdController.createJourney()
+
+POST        /validate-details           uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
 
