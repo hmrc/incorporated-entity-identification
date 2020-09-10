@@ -20,7 +20,7 @@ import play.api.test.Helpers._
 import play.api.libs.json.Json
 import utils.ComponentSpecHelper
 
-class GetCtReferenceStubControllerISpec extends ComponentSpecHelper {
+class StubGetCtReferenceControllerISpec extends ComponentSpecHelper {
 
   "getCtReference" should {
     "return OK with a json body containing a CTUTR" when {

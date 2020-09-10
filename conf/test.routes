@@ -1,1 +1,6 @@
-GET     /corporation-tax/identifiers/crn/:companyNumber                 uk.gov.hmrc.incorporatedentityidentification.testonly.GetCtReferenceStubController.getCtReference(companyNumber: String)
+GET        /corporation-tax/identifiers/crn/:companyNumber              uk.gov.hmrc.incorporatedentityidentification.testonly.GetCtReferenceStubController.getCtReference(companyNumber: String)
+
+GET        /api/feature-switches                                        uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
+
++ nocsrf
+POST       /api/feature-switches                                        uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()

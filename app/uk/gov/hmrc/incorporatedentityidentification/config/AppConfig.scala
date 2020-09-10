@@ -18,18 +18,25 @@ package uk.gov.hmrc.incorporatedentityidentification.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
+import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitching, StubGetCtReference}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends FeatureSwitching {
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 
-  def getCtReferenceUrl(companyNumber: String): String =
-    s"${servicesConfig.getString("microservice.services.des.url")}/corporation-tax/identifiers/crn/$companyNumber"
+  def getCtReferenceUrl(companyNumber: String): String = {
+    val baseUrl = if (isEnabled(StubGetCtReference)) desBaseUrl else desStubBaseUrl
+    s"$baseUrl/corporation-tax/identifiers/crn/$companyNumber"
+  }
+
+  lazy val desBaseUrl: String = servicesConfig.getString("microservice.services.des.url")
+
+  lazy val desStubBaseUrl: String = servicesConfig.getString("microservice.services.des.stub-url")
 
   lazy val desAuthorisationToken: String = s"Bearer ${servicesConfig.getString("microservice.services.des.authorisation-token")}"
 
