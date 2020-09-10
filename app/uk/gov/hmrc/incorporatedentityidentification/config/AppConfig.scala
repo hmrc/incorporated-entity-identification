@@ -26,5 +26,13 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
+
+  def getCtReferenceUrl(companyNumber: String): String =
+    s"${servicesConfig.getString("microservice.services.des.url")}/corporation-tax/identifiers/crn/$companyNumber"
+
+  lazy val desAuthorisationToken: String = s"Bearer ${servicesConfig.getString("microservice.services.des.authorisation-token")}"
+
+  lazy val desEnvironmentHeader: (String, String) = "Environment" -> servicesConfig.getString("microservice.services.des.environment")
+
 }

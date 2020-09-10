@@ -21,11 +21,12 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, Writes}
+import play.api.libs.json.Writes
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.incorporatedentityidentification.repositories.IncorporatedEntityIdentificationRepository
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
@@ -52,8 +53,8 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     "microservice.services.auth.port" -> mockPort,
     "microservice.services.base.host" -> mockHost,
     "microservice.services.base.port" -> mockPort,
-    "microservice.services.incorporation-information.url" -> mockUrl,
-    "microservice.services.incorporation-information.stub-url" -> mockUrl
+    "microservice.services.des.stub-url" -> mockUrl,
+    "microservice.services.des.url" -> mockUrl
   )
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
