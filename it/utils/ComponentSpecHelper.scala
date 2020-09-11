@@ -25,9 +25,6 @@ import play.api.libs.json.Writes
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.incorporatedentityidentification.repositories.IncorporatedEntityIdentificationRepository
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with CustomMatchers
@@ -59,8 +56,6 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
 
-  lazy val repo: IncorporatedEntityIdentificationRepository = app.injector.instanceOf[IncorporatedEntityIdentificationRepository]
-
   override def beforeAll(): Unit = {
     startWiremock()
     super.beforeAll()
@@ -73,7 +68,6 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   override def beforeEach(): Unit = {
     resetWiremock()
-    await(repo.drop)
     super.beforeEach()
   }
 

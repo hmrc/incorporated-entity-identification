@@ -1,6 +1,11 @@
 # microservice specific routes
 
-POST        /journey                    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyIdController.createJourney()
+POST        /journey                        uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.createJourney()
 
-POST        /validate-details           uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
+GET         /journey/:journeyId             uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.getJourneyData(journeyId)
+GET         /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.getJourneyDataByKey(journeyId, dataKey)
+
+PUT         /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.updateJourneyData(journeyId, dataKey)
+
+POST        /validate-details               uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
 

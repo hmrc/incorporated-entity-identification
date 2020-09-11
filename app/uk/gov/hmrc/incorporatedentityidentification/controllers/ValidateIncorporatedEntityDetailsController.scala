@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound, IncorporatedEntityDetailsModel}
-import uk.gov.hmrc.incorporatedentityidentification.services.{StoreJourneyIdService, ValidateIncorporatedEntityDetailsService}
+import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, ValidateIncorporatedEntityDetailsService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.{ExecutionContext, Future}

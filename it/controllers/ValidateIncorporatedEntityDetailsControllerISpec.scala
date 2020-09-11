@@ -16,7 +16,7 @@
 
 package controllers
 
-import assets.TestConstants.testCompanyNumber
+import assets.TestConstants._
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import stubs.GetCtReferenceStub
@@ -27,11 +27,11 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
   "validateDetails" should {
     "return details match" when {
       "supplied details match those in database" in {
-        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> "1234567890"))
+        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
         val testJson = Json.obj("matched" -> true)
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> "1234567890"
+          "ctutr" -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -43,7 +43,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
     "return details do not match" when {
       "supplied details do not match those in database" in {
-        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> "1234567890"))
+        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
         val testJson = Json.obj("matched" -> false)
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
@@ -67,7 +67,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",
-          "ctutr" -> "1234567890"
+          "ctutr" -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
