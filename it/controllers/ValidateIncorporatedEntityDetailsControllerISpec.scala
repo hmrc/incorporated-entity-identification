@@ -19,14 +19,15 @@ package controllers
 import assets.TestConstants._
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import stubs.GetCtReferenceStub
+import stubs.{AuthStub, GetCtReferenceStub}
 import utils.ComponentSpecHelper
 
-class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelper with GetCtReferenceStub {
+class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelper with GetCtReferenceStub with AuthStub {
 
   "validateDetails" should {
     "return details match" when {
       "supplied details match those in database" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
         val testJson = Json.obj("matched" -> true)
         val suppliedJson = Json.obj(
@@ -43,6 +44,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
     "return details do not match" when {
       "supplied details do not match those in database" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
         val testJson = Json.obj("matched" -> false)
         val suppliedJson = Json.obj(
@@ -59,6 +61,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
     "return details not found" when {
       "supplied details are not found in database" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubGetCtReference("000000000")(status = NOT_FOUND)
         val testJson = Json.obj(
           "code" -> "NOT_FOUND",
@@ -74,6 +77,23 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         result.status mustBe BAD_REQUEST
         result.json mustBe testJson
+      }
+    }
+    "return Unauthorised" when {
+      "there is an auth failure" in {
+        stubAuthFailure()
+        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
+
+        val testJson = Json.obj("matched" -> true)
+        val suppliedJson = Json.obj(
+          "companyNumber" -> testCompanyNumber,
+          "ctutr" -> testCtutr
+        )
+
+        val result = post("/validate-details")(suppliedJson)
+
+        result.status mustBe UNAUTHORIZED
+
       }
     }
   }

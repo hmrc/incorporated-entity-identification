@@ -17,31 +17,35 @@
 package uk.gov.hmrc.incorporatedentityidentification.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json.{JsError, JsSuccess, Json}
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, ControllerComponents}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound, IncorporatedEntityDetailsModel}
-import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, ValidateIncorporatedEntityDetailsService}
+import uk.gov.hmrc.incorporatedentityidentification.services.ValidateIncorporatedEntityDetailsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerComponents,
-                                                            validateIncorporatedEntityDetailsService: ValidateIncorporatedEntityDetailsService
-                                                           )(implicit ec: ExecutionContext) extends BackendController(cc) {
+                                                            validateIncorporatedEntityDetailsService: ValidateIncorporatedEntityDetailsService,
+                                                            val authConnector: AuthConnector
+                                                           )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
 
   def validateDetails(): Action[IncorporatedEntityDetailsModel] = Action.async(parse.json[IncorporatedEntityDetailsModel]) {
     implicit request =>
-      validateIncorporatedEntityDetailsService.validateDetails(request.body.companyNumber, request.body.ctutr).map {
-        case DetailsMatched =>
-          Ok(Json.obj("matched" -> true))
-        case DetailsMismatched =>
-          Ok(Json.obj("matched" -> false))
-        case DetailsNotFound =>
-          BadRequest(Json.obj(
-            "code" -> "NOT_FOUND",
-            "reason" -> "The back end has indicated that CT UTR cannot be returned")
-          )
+      authorised() {
+        validateIncorporatedEntityDetailsService.validateDetails(request.body.companyNumber, request.body.ctutr).map {
+          case DetailsMatched =>
+            Ok(Json.obj("matched" -> true))
+          case DetailsMismatched =>
+            Ok(Json.obj("matched" -> false))
+          case DetailsNotFound =>
+            BadRequest(Json.obj(
+              "code" -> "NOT_FOUND",
+              "reason" -> "The back end has indicated that CT UTR cannot be returned")
+            )
+        }
       }
   }
 
