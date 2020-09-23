@@ -19,6 +19,7 @@ package uk.gov.hmrc.incorporatedentityidentification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals._
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyDataService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -33,9 +34,9 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
 
   def createJourney(): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised() {
+      authorised().retrieve(internalId) { internalId =>
         val journeyIdKey = "journeyId"
-        journeyDataService.createJourney().map {
+        journeyDataService.createJourney(internalId).map {
           journeyId => Created(Json.obj(journeyIdKey -> journeyId))
         }
       }

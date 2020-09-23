@@ -44,7 +44,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe CREATED
         (res.json \ "journeyId").as[String] mustBe testJourneyId
-        findById(testJourneyId) mustBe Some(Json.obj("_id" -> testJourneyId))
+        findById(testJourneyId) mustBe Some(Json.obj("_id" -> testJourneyId, "authInternalId" -> testInternalId))
       }
       "return Unauthorised" in {
         stubAuthFailure()
