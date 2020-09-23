@@ -27,9 +27,9 @@ class JourneyDataService @Inject()(incorporatedEntityIdentificationRepository: J
                                    journeyIdGenerationService: JourneyIdGenerationService
                                   )(implicit ec: ExecutionContext) {
 
-  def createJourney(): Future[String] = {
+  def createJourney(authInternalId: Option[String]): Future[String] = {
     val journeyId = journeyIdGenerationService.generateJourneyId()
-    incorporatedEntityIdentificationRepository.createJourney(journeyId)
+    incorporatedEntityIdentificationRepository.createJourney(journeyId, authInternalId)
   }
 
   def getJourneyData(journeyId: String): Future[Option[JsObject]] = {

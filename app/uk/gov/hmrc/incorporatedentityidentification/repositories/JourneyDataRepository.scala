@@ -19,7 +19,7 @@ package uk.gov.hmrc.incorporatedentityidentification.repositories
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
+import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.play.json.JsObjectDocumentWriter
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
@@ -37,10 +37,11 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     idFormat = implicitly[Format[String]]
   ) {
 
-  def createJourney(journeyId: String): Future[String] =
+  def createJourney(journeyId: String, internalId: Option[String]): Future[String] =
     collection.insert(true).one(
       Json.obj(
-        journeyIdKey -> journeyId
+        journeyIdKey -> journeyId,
+        authInternalIdKey -> internalId
       )
     ).map(_ => journeyId)
 
@@ -80,4 +81,5 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
 
 object JourneyDataRepository {
   val journeyIdKey: String = "_id"
+  val authInternalIdKey: String = "authInternalId"
 }
