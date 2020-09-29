@@ -16,12 +16,13 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.models
 
-import play.api.libs.json.{JsObject, JsResult, JsValue, Json, OFormat}
+import play.api.libs.json._
 
 
 case class IncorporatedEntityIdentificationModel(journeyId: String)
 
 object IncorporatedEntityIdentificationModel {
+
   implicit object MongoFormat extends OFormat[IncorporatedEntityIdentificationModel] {
     override def writes(o: IncorporatedEntityIdentificationModel): JsObject =
       Json.obj("_id" -> o.journeyId)

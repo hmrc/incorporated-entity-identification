@@ -19,12 +19,12 @@ package uk.gov.hmrc.incorporatedentityidentification.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import uk.gov.hmrc.auth.core.retrieve.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyDataService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JourneyDataController @Inject()(cc: ControllerComponents,
@@ -44,35 +44,56 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
 
   def getJourneyData(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised() {
-        journeyDataService.getJourneyData(journeyId).map {
-          case Some(journeyData) => Ok(journeyData)
-          case None => NotFound(Json.obj(
+      authorised().retrieve(internalId) { internalId =>
+        journeyDataService.getJourneyData(journeyId).flatMap {
+          case Some(journeyData) =>
+            journeyDataService.getStoredAuthInternalId(journeyId).map {
+              authInternalId =>
+                if (authInternalId == internalId) Ok(journeyData)
+                else Forbidden(Json.obj(
+                  "code" -> "FORBIDDEN",
+                  "reason" -> "Auth Internal IDs do not match"))
+            }
+          case None => Future.successful(NotFound(Json.obj(
             "code" -> "NOT_FOUND",
             "reason" -> s"No data exists for journey ID: $journeyId"
-          ))
+          )))
         }
       }
   }
 
   def getJourneyDataByKey(journeyId: String, dataKey: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised() {
-        journeyDataService.getJourneyData(journeyId, dataKey).map {
-          case Some(journeyData) => Ok(journeyData)
-          case None => NotFound(Json.obj(
-            "code" -> "NOT_FOUND",
-            "reason" -> s"No data exists for either journey ID: $journeyId or data key: $dataKey"
-          ))
+      authorised().retrieve(internalId) { internalId =>
+        journeyDataService.getStoredAuthInternalId(journeyId).flatMap {
+          authInternalId =>
+            if (authInternalId == internalId) {
+              journeyDataService.getJourneyData(journeyId, dataKey).map {
+                case Some(journeyData) => Ok(journeyData)
+                case None => NotFound(Json.obj("code" -> "NOT_FOUND",
+                  "reason" -> s"No data exists for either journey ID: $journeyId or data key: $dataKey"))
+              }
+            }
+            else Future.successful(Forbidden(Json.obj(
+              "code" -> "FORBIDDEN",
+              "reason" -> "Auth Internal IDs do not match")))
         }
       }
   }
 
   def updateJourneyData(journeyId: String, dataKey: String): Action[JsValue] = Action.async(parse.json) {
     implicit req =>
-      authorised() {
-        journeyDataService.updateJourneyData(journeyId, dataKey, req.body)
-          .map(_ => Ok)
+      authorised().retrieve(internalId) { internalId =>
+        journeyDataService.updateJourneyData(journeyId, dataKey, req.body).flatMap(
+          _ => {
+            journeyDataService.getStoredAuthInternalId(journeyId).map {
+              authInternalId =>
+                if (authInternalId == internalId) Ok
+                else Forbidden(Json.obj("code" -> FORBIDDEN,
+                  "reason" -> "Auth Internal IDs do not match"))
+            }
+          }
+        )
       }
   }
 }

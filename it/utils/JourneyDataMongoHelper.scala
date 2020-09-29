@@ -36,8 +36,8 @@ trait JourneyDataMongoHelper extends BeforeAndAfterEach {
       None
     ).one[JsObject])
 
-  def insertById(journeyId: String, jsonData: JsObject = Json.obj()): Unit =
-    await(repo.collection.insert(true).one(Json.obj("_id" -> journeyId) ++ jsonData))
+  def insertById(journeyId: String, internalId: String, jsonData: JsObject = Json.obj()): Unit =
+    await(repo.collection.insert(true).one(Json.obj("_id" -> journeyId, "authInternalId" -> internalId) ++ jsonData))
 
   override def beforeEach(): Unit = {
     await(repo.drop)
