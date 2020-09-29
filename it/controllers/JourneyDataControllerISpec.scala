@@ -30,6 +30,7 @@ import utils.{ComponentSpecHelper, CustomMatchers, JourneyDataMongoHelper}
 
 class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers with JourneyDataMongoHelper with AuthStub {
   lazy val testJourneyId = "testJourneyId"
+  lazy val testIncorrectAuthInternalId = "testIncorrectAuthInternalId"
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .overrides(bind[JourneyIdGenerationService].toInstance(new FakeJourneyIdGenerationService(testJourneyId)))
@@ -58,16 +59,23 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
   "GET /journey/:journeyId" when {
     "there is data stored against the journey ID" should {
       "return all data stored against the journey ID" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         val testData = Json.obj(
           "testField" -> "testValue"
         )
-        insertById(testJourneyId, testData)
+
+        insertById(testJourneyId, testInternalId, testData)
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        val expectedData = Json.obj(
+          "testField" -> "testValue",
+          "authInternalId" -> testInternalId
+        )
 
         val res = get(s"/journey/$testJourneyId")
 
         res.status mustBe OK
-        res.json mustBe testData
+        res.json mustBe expectedData
       }
     }
     "there is no data stored against the journey ID" should {
@@ -89,11 +97,23 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val testData = Json.obj(
           "testField" -> "testValue"
         )
-        insertById(testJourneyId, testData)
+        insertById(testJourneyId, testInternalId, testData)
 
         val res = get(s"/journey/$testJourneyId")
 
         res.status mustBe UNAUTHORIZED
+      }
+      "return Forbidden" in {
+        stubAuth(OK, successfulAuthResponse(Some(testIncorrectAuthInternalId)))
+
+        val testData = Json.obj(
+          "testField" -> "testValue"
+        )
+        insertById(testJourneyId, testInternalId, testData)
+
+        val res = get(s"/journey/$testJourneyId")
+
+        res.status mustBe FORBIDDEN
       }
     }
   }
@@ -108,14 +128,14 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val testData = Json.obj(
           testDataKey -> testDataValue
         )
-        insertById(testJourneyId, testData)
+        insertById(testJourneyId, testInternalId, testData)
 
         val res = get(s"/journey/$testJourneyId/$testDataKey")
 
         res.status mustBe OK
         res.json mustBe JsString(testDataValue)
       }
-      "return Unathorised" in {
+      "return Unauthorised" in {
         stubAuthFailure()
 
         val testDataKey = "testDataKey"
@@ -124,11 +144,25 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val testData = Json.obj(
           testDataKey -> testDataValue
         )
-        insertById(testJourneyId, testData)
+        insertById(testJourneyId, testInternalId, testData)
 
         val res = get(s"/journey/$testJourneyId/$testDataKey")
 
         res.status mustBe UNAUTHORIZED
+      }
+      "return Forbidden" in {
+        stubAuth(OK, successfulAuthResponse(Some(testIncorrectAuthInternalId)))
+        val testDataKey = "testDataKey"
+        val testDataValue = "testDataValue"
+
+        val testData = Json.obj(
+          testDataKey -> testDataValue
+        )
+        insertById(testJourneyId, testInternalId, testData)
+
+        val res = get(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe FORBIDDEN
       }
     }
 
@@ -137,7 +171,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         val testDataKey = "testDataKey"
 
-        insertById(testJourneyId)
+        insertById(testJourneyId, testInternalId)
 
         val res = get(s"/journey/$testJourneyId/$testDataKey")
 
@@ -153,6 +187,8 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
       "return all the data stored against the journeyId and dataKey" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         val testDataKey = "testDataKey"
+
+        insertById(testJourneyId, testInternalId)
 
         val res = get(s"/journey/$testJourneyId/$testDataKey")
 
@@ -174,11 +210,19 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val testData = Json.obj(
           testDataKey -> testDataValue
         )
-        insertById(testJourneyId, testData)
+        insertById(testJourneyId, testInternalId, testData)
 
         val res = get(s"/journey/$testJourneyId/$testDataKey")
 
         res.status mustBe UNAUTHORIZED
+      }
+      "return Forbidden" in {
+        stubAuth(OK, successfulAuthResponse(Some(testIncorrectAuthInternalId)))
+        val testDataKey = "testDataKey"
+
+        val res = get(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe FORBIDDEN
       }
     }
 
@@ -191,7 +235,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val testDataKey = "testDataKey"
         val testDataValue = "testDataValue"
 
-        insertById(testJourneyId)
+        insertById(testJourneyId, testInternalId)
 
         val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
 
@@ -200,13 +244,14 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         findById(testJourneyId) mustBe Some(
           Json.obj(
             "_id" -> testJourneyId,
+            "authInternalId" -> testInternalId,
             testDataKey -> testDataValue
           )
         )
       }
     }
     "there is no journey for the provided journey ID" should {
-      "fail" in {
+      "return Internal Server Error" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         val testDataKey = "testDataKey"
         val testDataValue = "testDataValue"
@@ -225,11 +270,22 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val testDataKey = "testDataKey"
         val testDataValue = "testDataValue"
 
-        insertById(testJourneyId)
+        insertById(testJourneyId, testInternalId)
 
         val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
 
         res.status mustBe UNAUTHORIZED
+      }
+      "return Forbidden" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        val testDataKey = "testDataKey"
+        val testDataValue = "testDataValue"
+
+        insertById(testJourneyId, testIncorrectAuthInternalId)
+
+        val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
+
+        res.status mustBe FORBIDDEN
       }
     }
   }

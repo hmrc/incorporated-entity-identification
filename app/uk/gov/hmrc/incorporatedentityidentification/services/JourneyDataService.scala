@@ -43,6 +43,13 @@ class JourneyDataService @Inject()(incorporatedEntityIdentificationRepository: J
     }
   }
 
+  def getStoredAuthInternalId(journeyId: String): Future[Option[String]] = {
+    incorporatedEntityIdentificationRepository.getJourneyData(journeyId).map {
+      case Some(json) => (json \ "authInternalId").asOpt[String]
+      case None => None
+    }
+  }
+
   def updateJourneyData(journeyId: String, dataKey: String, data: JsValue): Future[Any] =
     incorporatedEntityIdentificationRepository.updateJourneyData(journeyId: String, dataKey: String, data: JsValue)
       .filter(_.n == 1)
