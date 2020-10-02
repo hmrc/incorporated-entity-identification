@@ -20,15 +20,21 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.UpdateWriteResult
+import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.JsObjectDocumentWriter
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
+import views.html.helper.options
+import java.time.Instant
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent)
+class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent,
+                                      appConfig: AppConfig)
                                      (implicit ec: ExecutionContext)
   extends ReactiveRepository(
     collectionName = "incorporated-entity-identification",
@@ -41,7 +47,8 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     collection.insert(true).one(
       Json.obj(
         journeyIdKey -> journeyId,
-        authInternalIdKey -> internalId
+        authInternalIdKey -> internalId,
+        "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
       )
     ).map(_ => journeyId)
 
@@ -77,9 +84,32 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       upsert = false,
       multi = false
     )
+
+  private lazy val ttlIndex = Index(
+    Seq(("creationTimestamp", IndexType.Ascending)),
+    name = Some("IncorporatedEntityInformationExpires"),
+    options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
+  )
+  private def setIndex(): Unit = {
+    collection.indexesManager.drop(ttlIndex.name.get) onComplete {
+      _ => collection.indexesManager.ensure(ttlIndex)
+    }
+  }
+
+  setIndex()
+
+  override def drop(implicit ec: ExecutionContext): Future[Boolean] =
+    collection.drop(failIfNotFound = false).map { r =>
+      setIndex()
+      r
+    }
 }
+
 
 object JourneyDataRepository {
   val journeyIdKey: String = "_id"
   val authInternalIdKey: String = "authInternalId"
+
+
+
 }

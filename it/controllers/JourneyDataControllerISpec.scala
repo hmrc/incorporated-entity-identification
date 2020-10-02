@@ -16,6 +16,8 @@
 
 package controllers
 
+import java.time.Instant
+
 import assets.TestConstants._
 import play.api.Application
 import play.api.http.Status.CREATED
@@ -45,7 +47,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe CREATED
         (res.json \ "journeyId").as[String] mustBe testJourneyId
-        findById(testJourneyId) mustBe Some(Json.obj("_id" -> testJourneyId, "authInternalId" -> testInternalId))
+        findById(testJourneyId).map(_.-("creationTimestamp")) mustBe Some(Json.obj("_id" -> testJourneyId, "authInternalId" -> testInternalId))
       }
       "return Unauthorised" in {
         stubAuthFailure()
@@ -260,7 +262,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe INTERNAL_SERVER_ERROR
 
-        findById(testJourneyId) mustBe empty
+        findById(testJourneyId) mustBe None
       }
     }
     "the auth internalIds do not match" should {
