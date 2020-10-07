@@ -46,7 +46,7 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper with AbstractPatien
         val journeyConfig = "continueURL"
         await(repo.createJourney(journeyId, None))
         implicit val patienceConfig: PatienceConfig =
-          PatienceConfig(timeout = scaled(Span(50, Seconds)), interval = scaled(Span(10, Seconds)))
+          PatienceConfig(timeout = scaled(Span(90, Seconds)), interval = scaled(Span(10, Seconds)))
         eventually {
           await(repo.findById(journeyId)) mustBe None
         }
