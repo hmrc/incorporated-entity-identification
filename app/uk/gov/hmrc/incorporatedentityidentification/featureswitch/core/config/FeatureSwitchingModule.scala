@@ -24,7 +24,7 @@ import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.models.Fe
 @Singleton
 class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 
-  val switches = Seq(StubGetCtReference)
+  val switches = Seq(StubGetCtReference, DesStub)
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
@@ -36,4 +36,9 @@ class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 case object StubGetCtReference extends FeatureSwitch {
   override val configName: String = "feature-switch.ct-reference-stub"
   override val displayName: String = "Use stub for Get CT Reference stub"
+}
+
+case object DesStub extends FeatureSwitch {
+  override val configName: String = "feature-switch.des-stub"
+  override val displayName: String = "Use stub for submissions to DES"
 }

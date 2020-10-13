@@ -18,7 +18,7 @@ package uk.gov.hmrc.incorporatedentityidentification.config
 
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
-import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitching, StubGetCtReference}
+import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{DesStub, FeatureSwitching, StubGetCtReference}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
@@ -32,6 +32,11 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   def getCtReferenceUrl(companyNumber: String): String = {
     val baseUrl = if (isEnabled(StubGetCtReference)) desBaseUrl else desStubBaseUrl
     s"$baseUrl/corporation-tax/identifiers/crn/$companyNumber"
+  }
+
+  lazy val getRegisterWithMultipleIdentifiersUrl: String = {
+    val baseUrl = if (isEnabled(DesStub)) desBaseUrl else desStubBaseUrl
+    s"$baseUrl/cross-regime/register/VATC"
   }
 
   lazy val desBaseUrl: String = servicesConfig.getString("microservice.services.des.url")
