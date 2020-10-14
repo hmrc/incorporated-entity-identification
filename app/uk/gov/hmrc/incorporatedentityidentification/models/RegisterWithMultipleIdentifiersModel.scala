@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incorporatedentityidentification.testonly
+package uk.gov.hmrc.incorporatedentityidentification.models
 
-import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, InjectedController}
+import play.api.libs.json.{Json, OFormat}
 
-class RegisterWithMultipleIdentifiersStubController extends InjectedController{
+case class RegisterWithMultipleIdentifiersModel(company: CompanyModel)
 
-  val registerWithMultipleIdentifiers: Action[AnyContent] = Action {
-    val stubbedSafeId = "X00000123456789"
+case class CompanyModel(crn: String, ctutr: String)
 
-    Ok(Json.obj(
-      "identification" -> Json.arr(
-        Json.obj(
-          "idType" -> "SAFEID",
-          "idValue" -> stubbedSafeId
-        )
-      )
-    ))
-  }
+object RegisterWithMultipleIdentifiersModel {
+  implicit val format: OFormat[RegisterWithMultipleIdentifiersModel] = Json.format[RegisterWithMultipleIdentifiersModel]
+}
+
+object CompanyModel {
+  implicit val format: OFormat[CompanyModel] = Json.format[CompanyModel]
 }

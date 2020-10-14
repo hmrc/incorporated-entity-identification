@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.repositories
 
+import java.time.Instant
+
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
@@ -23,12 +25,10 @@ import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.JsObjectDocumentWriter
+import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.ReactiveRepository
-import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import views.html.helper.options
-import java.time.Instant
 
 import scala.concurrent.{ExecutionContext, Future}
 
