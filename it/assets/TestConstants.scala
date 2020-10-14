@@ -13,6 +13,5 @@ object TestConstants {
   val GGProviderId = UUID.randomUUID().toString
   val testGroupId = UUID.randomUUID().toString
   val testInternalId = UUID.randomUUID().toString
-  val testSafeId = UUID.randomUUID().toString
 
 }

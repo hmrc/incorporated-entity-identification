@@ -9,4 +9,3 @@ PUT         /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidenti
 
 POST        /validate-details               uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
 
-POST        /cross-regime/register/VATC    uk.gov.hmrc.incorporatedentityidentification.controllers.RegisterWithMultipleIdentifiersController.register()
