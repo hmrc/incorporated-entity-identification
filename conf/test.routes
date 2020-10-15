@@ -3,3 +3,5 @@ GET        /corporation-tax/identifiers/crn/:companyNumber              uk.gov.h
 GET        /api/feature-switches                                        uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
 
 POST       /api/feature-switches                                        uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
+
+POST       /cross-regime/register/VATC                                  uk.gov.hmrc.incorporatedentityidentification.testonly.RegisterWithMultipleIdentifiersStubController.registerWithMultipleIdentifiers

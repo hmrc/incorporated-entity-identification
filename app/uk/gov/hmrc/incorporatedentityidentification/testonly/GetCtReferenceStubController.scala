@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.testonly
 
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, InjectedController}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import scala.concurrent.Future
 
-class GetCtReferenceStubController extends InjectedController {
+@Singleton
+class GetCtReferenceStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   def getCtReference(companyNumber: String): Action[AnyContent] = Action.async {
 

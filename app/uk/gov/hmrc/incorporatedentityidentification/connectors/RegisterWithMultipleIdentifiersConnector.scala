@@ -64,10 +64,10 @@ object RegisterWithMultipleIdentifiersHttpParser {
             safeId <- (response.json \ IdentificationKey \ IdentificationValueKey).validate[String]
           } yield safeId) match {
             case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
-            case error: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
+            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
           }
-        case status =>
-          RegisterWithMultipleIdentifiersFailure(status, response.body)
+        case _ =>
+          throw new InternalServerException(s"Invalid response on Register API: ${response.status}, ${response.body}")
       }
     }
   }
