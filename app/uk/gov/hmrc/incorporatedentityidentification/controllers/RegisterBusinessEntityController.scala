@@ -29,7 +29,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
                                                  registerWithMultipleIdentifiersService: RegisterWithMultipleIdentifiersService,
-                                                 val authConnector: AuthConnector,
+                                                 val authConnector: AuthConnector
                                                 )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
 
   def register(): Action[JsValue] = Action.async(parse.json) {
