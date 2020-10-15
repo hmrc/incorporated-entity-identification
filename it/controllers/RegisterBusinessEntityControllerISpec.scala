@@ -18,13 +18,13 @@ package controllers
 
 import assets.TestConstants.{testCompanyNumber, testCtutr, testInternalId, testSafeId}
 import play.api.libs.json.Json
-import play.api.test.Helpers.{OK, BAD_REQUEST}
+import play.api.test.Helpers._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import utils.ComponentSpecHelper
 
 class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with AuthStub with RegisterWithMultipleIdentifiersStub {
 
-  "POST /cross-regime/register/VATC" should {
+  "POST /register" should {
     "return OK with status Registered and the SafeId" when {
       "the Registration was a success" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
@@ -43,7 +43,7 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
             "registrationStatus" -> "REGISTERED",
             "registeredBusinessPartnerId" -> testSafeId))
 
-        val result = post(s"/cross-regime/register/VATC")(jsonBody)
+        val result = post("/register")(jsonBody)
         result.status mustBe OK
         result.json mustBe resultJson
       }
@@ -61,13 +61,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
             )
         )
 
-        val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTRATION_FAILED"))
-
-        val result = post(s"/cross-regime/register/VATC")(jsonBody)
-        result.status mustBe OK
-        result.json mustBe resultJson
+        val result = post("/register")(jsonBody)
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

@@ -16,10 +16,13 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.testonly
 
+import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, InjectedController}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-class RegisterWithMultipleIdentifiersStubController extends InjectedController{
+@Singleton
+class RegisterWithMultipleIdentifiersStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   val registerWithMultipleIdentifiers: Action[AnyContent] = Action {
     val stubbedSafeId = "X00000123456789"
