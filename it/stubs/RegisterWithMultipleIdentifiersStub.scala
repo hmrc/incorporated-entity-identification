@@ -24,9 +24,11 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
 
   private def registerResponseSuccessBody(safeId: String): JsObject =
     Json.obj(
-      "identification" -> Json.obj(
-        "idType" -> "SAFEID",
-        "idValue" -> safeId
+      "identification" -> Json.arr(
+        Json.obj(
+          "idType" -> "SAFEID",
+          "idValue" -> safeId
+        )
       )
     )
 
