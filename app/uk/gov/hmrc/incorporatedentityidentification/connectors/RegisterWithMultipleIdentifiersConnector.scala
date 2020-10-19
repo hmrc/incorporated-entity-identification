@@ -59,9 +59,9 @@ object RegisterWithMultipleIdentifiersHttpParser {
       response.status match {
         case OK =>
           (for {
-            idType <- (response.json \ IdentificationKey \ IdentificationTypeKey).validate[String]
+            idType <- (response.json \ IdentificationKey \ 0 \ IdentificationTypeKey).validate[String]
             if idType == SafeIdKey
-            safeId <- (response.json \ IdentificationKey \ IdentificationValueKey).validate[String]
+            safeId <- (response.json \ IdentificationKey \ 0 \ IdentificationValueKey).validate[String]
           } yield safeId) match {
             case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
             case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
