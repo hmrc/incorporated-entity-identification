@@ -17,7 +17,6 @@
 package connectors
 
 import assets.TestConstants.{testCompanyNumber, testCtutr}
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import stubs.{AuthStub, GetCtReferenceStub}
@@ -36,7 +35,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with AuthStub wit
       stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
       val res = connector.getCtReference(testCompanyNumber)
 
-      await(res) shouldBe Right(testCtutr)
+      await(res) mustBe Some(testCtutr)
     }
   }
 
