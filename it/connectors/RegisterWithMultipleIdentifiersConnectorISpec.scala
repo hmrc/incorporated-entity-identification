@@ -33,8 +33,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
       "the Registration was a success" in {
         stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
         val result = connector.register(testCompanyNumber, testCtutr)
-      await(result) mustBe(RegisterWithMultipleIdentifiersSuccess(testSafeId))
-
+        await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
       }
     }
   }
