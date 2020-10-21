@@ -109,7 +109,4 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
 object JourneyDataRepository {
   val journeyIdKey: String = "_id"
   val authInternalIdKey: String = "authInternalId"
-
-
-
 }
