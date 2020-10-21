@@ -37,4 +37,5 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
       }
     }
   }
+
 }

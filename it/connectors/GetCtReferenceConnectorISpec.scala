@@ -39,4 +39,13 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with AuthStub wit
     }
   }
 
+  "getCtReference" should {
+    "return not found" in {
+      stubGetCtReference(testCompanyNumber)(status = NOT_FOUND)
+      val res = connector.getCtReference("000000000")
+
+      await(res) mustBe None
+    }
+  }
+
 }
