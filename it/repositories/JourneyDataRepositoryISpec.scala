@@ -16,42 +16,58 @@
 
 package repositories
 
-import org.scalatest.concurrent.{AbstractPatienceConfiguration, Eventually}
-import org.scalatest.time.{Seconds, Span}
-import play.api.inject.guice.GuiceApplicationBuilder
+import assets.TestConstants.{testInternalId, testJourneyId}
+import play.api.libs.json.{JsString, Json}
 import play.api.test.Helpers._
-import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
-import utils.ComponentSpecHelper
-import assets.TestConstants.testJourneyId
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
-import utils.WiremockHelper.scaled
+import utils.ComponentSpecHelper
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class JourneyDataRepositoryISpec extends ComponentSpecHelper with AbstractPatienceConfiguration with Eventually{
+class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 
-    override lazy val app: Application = new GuiceApplicationBuilder()
-      .in(Environment.simple(mode = Mode.Dev))
-      .configure(config)
-      .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")
-      .configure("mongodb.timeToLiveSeconds" -> "10")
-      .build
+  val repo: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
-    val repo: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
+  override def beforeEach: Unit = {
+    super.beforeEach()
+    await(repo.drop)
+  }
 
-    "documents" should {
-      "expire" in {
-        val journeyId = testJourneyId
-        val journeyConfig = "continueURL"
-        await(repo.createJourney(journeyId, None))
-        implicit val patienceConfig: PatienceConfig =
-          PatienceConfig(timeout = scaled(Span(90, Seconds)), interval = scaled(Span(10, Seconds)))
-        eventually {
-          await(repo.findById(journeyId)) mustBe None
-        }
-      }
+  val authInternalIdKey: String = "authInternalId"
+  val creationTimestampKey: String = "creationTimestamp"
+
+  "createJourney" should {
+    "successfully insert the journeyId" in {
+      repo.createJourney(testJourneyId, None)
+      await(repo.findById(testJourneyId)) mustBe Some(IncorporatedEntityIdentificationModel(testJourneyId))
+    }
+  }
+  s"getJourneyData($testJourneyId)" should {
+    "successfully return all data" in {
+      await(repo.createJourney(testJourneyId, Some(testInternalId)))
+      await(repo.getJourneyData(testJourneyId)).map(_.-(creationTimestampKey)) mustBe Some(Json.obj(authInternalIdKey -> testInternalId))
+    }
+  }
+  "updateJourneyData" should {
+    "successfully insert data" in {
+      val testKey = "testKey"
+      val testData = "test"
+      await(repo.createJourney(testJourneyId, Some(testInternalId)))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData)))
+      await(repo.getJourneyData(testJourneyId, testKey)) mustBe Some(Json.obj(testKey -> testData))
+    }
+    "successfully update data when data is already stored against a key" in {
+      val testKey = "testKey"
+      val testData = "test"
+      val updateData = "updated"
+      await(repo.createJourney(testJourneyId, Some(testInternalId)))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData)))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(updateData)))
+      await(repo.getJourneyData(testJourneyId, testKey)) mustBe Some(Json.obj(testKey -> updateData))
     }
 
   }
+
+}
 
