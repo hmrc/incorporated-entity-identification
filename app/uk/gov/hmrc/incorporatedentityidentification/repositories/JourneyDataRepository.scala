@@ -27,7 +27,7 @@ import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.JsObjectDocumentWriter
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.{authInternalIdKey, _}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -90,6 +90,7 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     name = Some("IncorporatedEntityInformationExpires"),
     options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
   )
+
   private def setIndex(): Unit = {
     collection.indexesManager.drop(ttlIndex.name.get) onComplete {
       _ => collection.indexesManager.ensure(ttlIndex)
@@ -104,7 +105,6 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       r
     }
 }
-
 
 object JourneyDataRepository {
   val journeyIdKey: String = "_id"

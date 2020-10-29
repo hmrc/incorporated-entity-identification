@@ -30,12 +30,12 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 
   def getCtReferenceUrl(companyNumber: String): String = {
-    val baseUrl = if (isEnabled(StubGetCtReference)) desBaseUrl else desStubBaseUrl
+    val baseUrl = if (isEnabled(StubGetCtReference)) desStubBaseUrl else  desBaseUrl
     s"$baseUrl/corporation-tax/identifiers/crn/$companyNumber"
   }
 
   lazy val getRegisterWithMultipleIdentifiersUrl: String = {
-    val baseUrl = if (isEnabled(DesStub)) desBaseUrl else desStubBaseUrl
+    val baseUrl = if (isEnabled(DesStub)) desStubBaseUrl else desBaseUrl
     s"$baseUrl/cross-regime/register/VATC"
   }
 
