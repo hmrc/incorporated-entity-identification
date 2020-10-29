@@ -1,5 +1,5 @@
 
-# incorporated-entity-identification
+# Incorporated Entity Identification
 
 This is an application to allow Limited Companies to provide their information to HMRC.
 
@@ -7,17 +7,18 @@ This is an application to allow Limited Companies to provide their information t
 1. Make sure any dependent services are running using the following service-manager command
 `sm --start INCORPORATED_ENTITY_IDENTIFICATION_ALL`
 
-2. Stop the frontend in service manager using
- `sm --stop INCORPORATED_ENTITY_IDENTIFICATION_FRONTEND`
+2. Stop the backend in service manager using
+ `sm --stop INCORPORATED_ENTITY_IDENTIFICATION`
  
-3. Run the frontend locally using
-`sbt 'run 9718 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
+3. Run the backend locally using
+`sbt 'run 9719 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
 
 ### End-Points
-#### POST /Journey
+#### POST /journey
 
 ---
-Creates a new journey, storing the journeyConfig against the journeyId
+Creates a new journeyId and stores it in the database
+
 ##### Request:
 No body is required for this request
 
@@ -27,25 +28,28 @@ Status: **Created(201)**
 Example Response body: 
 
 ```
-{“journeyStartUrl” : "/testUrl"}
+{“journeyId”: "<random UUID>"}
 ```
-#### GET /Journey/:journeyId  
+
+#### GET /journey/:journeyId  
 
 ---
 Retrieves all the journey data that is stored against a specific journeyID.
+
 ##### Request:
 A valid journeyId must be sent in the URI
-##### Response:
-Status:
 
-| Expected Response                       | Reason  
+##### Response
+
+| Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
 | ```OK(200)```                           |  ```JourneyId exists```       
-| ```NOT_FOUND(404)```                    | ```JourneyId doesn't exist```
+| ```NOT_FOUND(404)```                    | ```JourneyId does not exist```
 
 Example response body:
 ```
-{"companyProfile":
+{
+"companyProfile":
     {"companyName":"TestCompanyLtd”,
     “companyNumber":"01234567",
     "dateOfIncorporation":"2020-01-01"},
@@ -58,116 +62,158 @@ Example response body:
     "registeredBusinessPartnerId":"X00000123456789"}
 }
 ```
-#### GET /Journey/:journeyId/:dataKey
+#### GET /journey/:journeyId/:dataKey
 
 ---
-Retrieves all the journey data that matches the dataKey in a specific journeyID.
+Retrieves all the journey data that matches the dataKey for a specific journeyID.
+
 ##### Request:
-A valid journeyId and dataKey must be sent in the URI
+Example Request URI
 ```
-example: JourneyDataController.getJourneyDataByKey(journeyId, ctutr)
+/journey/testJourneyId/ctutr
 ```
 
 ##### Response:
-Status:
 
-| Expected Response                       | Reason  
+| Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
 | ```OK(200)```                           |  ```JourneyId exists```       
 | ```NOT_FOUND(404)```                    | ```No data exists for JourneyId or dataKey```
 | ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
 
 
-Example response body:
+Response body for example URI:
 ```
-"ctutr":"1234567890"
+{"1234567890"}
 ```
 
-#### PUT  /journey/:journeyId/:dataKey
+#### PUT /journey/:journeyId/:dataKey
 
 ---
-stores the json body as the value to the given key in the journey given by the jorneyId
-##### Request:
-requires a valid journeyId, dataKey and json request
+Stores the json body against the data key and journey id provided in the uri
 
+##### Request:
+Requires a valid journeyId and user must be authorised to make changes to the data
+
+Example request URI:
+```
+/journey/testJourneyId/ctutr
+```
+
+Example request body:
+```
+{"1234567890"}
+```
 ##### Response:
 
-Status:
-
-| Expected Response                       | Reason  
+| Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
 | ```OK(200)```                           |  ```OK```       
 | ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
 
-Example response body:
-```
-"set":Json.obj(dataKey -> data)
-```
-
-####  POST        /validate-details 
-validates the input against the database
-##### Request:
-No body is required for this request
-##### Response:
-
-Status:
-
-| Expected Response                       | Reason  
-|-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```DetailsMatched```       
-| ```OK(200)```                           |  ```DetailsMismatched```     
-| ```NOT_FOUND(404)```                    | ```DetailsNotFound```
-
-Example response body:
-```
-"OK":{"matched":true}
-```
-
-####  POST        /register  
-calls the register api
-##### Request:
-No body is required for this request
-##### Response:
-Status:
-
-| Expected Response                       | Reason  
-|-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```Registered```       
-| ```OK(200)```                           |  ```RegistrationFailed```  
-Example response body:
-```
-"registration":{
-                "registrationStatus":"REGISTERED",
-                "registeredBusinessPartnerId":"1030310a-97f5-4893-8d26-3f128f330d54"}
-```
-
-
-#### GET    /corporation-tax/identifiers/crn/:companyNumber  
+#### POST /validate-details 
 
 ---
-returns the CT reference of the given company
-##### Request:
-requires a valid Company Number
-##### Response:
-Status: 
+Checks if the user entered identifiers match what is held in the database.
+This endpoint is feature switched using the `Use stub for Get CT Reference` switch, which returns the same specific CTUTR. 
 
-| Expected Response                       | Reason  
+##### Request:
+Body:
+
+```
+{
+"companyNumber": 1234567890,
+"ctutr": 12345678
+}
+```
+
+##### Response:
+
+| Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```successful ```       
-| ```NOT_FOUND(404)```                    |  ```The back end has indicated that CT UTR cannot be returned```  
+| ```OK(200)```                           |  ```Identifiers found in database and check returned a result```       
+| ```NOT_FOUND(404)```                    |  ```No identifiers found in databse```
+
+Example response bodies:
+```
+{"matched":true}
+```
+or
+```
+{"matched":false}
+```
+
+#### POST /register  
+
+___
+Submits a registration request to the downstream Register API.
+This API is feature switched behind the `Use stub for submissions to DES` switch so it can be stubbed using the Register test endpoint described below.
+
+##### Request:
+Body:
+
+```
+{
+"company": {
+            "crn": 12345678,
+            "ctutr": 1234567890
+           }
+}
+```
+
+##### Response:
+
+Status: **OK(200)**
+Attempted registration and returns result of call       
+
+
+Example response bodies:
+```
+{
+"registration":{
+                "registrationStatus":"REGISTERED",
+                "registeredBusinessPartnerId":"<randomm UUID>"
+               }
+}
+```
+or
+```
+{
+"registration":{
+                "registrationStatus":"REGISTRATION_FAILED",
+               }
+}
+```
+
+### Test End Points
+#### GET /test-only/corporation-tax/identifiers/crn/:companyNumber  
+
+---
+Stubs a call to retrieve a CTUTR from the database
+
+##### Request:
+URI must contain a company number
+
+##### Response:
+
+| Expected Status                         | Reason  
+|-----------------------------------------|------------------------------
+| ```OK(200)```                           |  ```CTUTR found```       
+| ```NOT_FOUND(404)```                    |  ```No CTUTR found in database```  
 
 Example Response body: 
 
 ```
-"CTUTR":"1234567890"
+"{CTUTR":"1234567890}"
 ```
 
-#### POST       /cross-regime/register/VATC   
+#### POST /test-only/cross-regime/register/:identifier   
 
 ---
-stub for registerWithMultipleIdentifiers
+Stub for downstream Register API
+
 ##### Request:
-No body is required for this request
+No body is required for this request as this always returns a successful response regardless of the data sent.
 
 ##### Response:
 Status: **OK(200)**
@@ -175,9 +221,12 @@ Status: **OK(200)**
 Example Response body: 
 
 ```
-"identification":(
-          "idType":"SAFEID",
-          "idValue":"X00000123456789")
+{
+"identification":{
+                  "idType":"SAFEID",
+                  "idValue":"X00000123456789"
+                 }
+}
 ```
 
 ### License
