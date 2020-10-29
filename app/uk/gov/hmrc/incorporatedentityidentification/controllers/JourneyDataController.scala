@@ -21,6 +21,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyDataService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -45,19 +46,20 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
   def getJourneyData(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) { internalId =>
-        journeyDataService.getJourneyData(journeyId).flatMap {
-          case Some(journeyData) =>
-            journeyDataService.getStoredAuthInternalId(journeyId).map {
-              authInternalId =>
-                if (authInternalId == internalId) Ok(journeyData)
-                else Forbidden(Json.obj(
+        journeyDataService.getStoredAuthInternalId(journeyId).flatMap {
+          authInternalId =>
+            journeyDataService.getJourneyData(journeyId).map {
+              case Some(journeyData) if authInternalId == internalId => Ok(journeyData)
+              case Some(_) =>
+                Forbidden(Json.obj(
                   "code" -> "FORBIDDEN",
                   "reason" -> "Auth Internal IDs do not match"))
+              case None =>
+                NotFound(Json.obj(
+                  "code" -> "NOT_FOUND",
+                  "reason" -> s"No data exists for journey ID: $journeyId"
+                ))
             }
-          case None => Future.successful(NotFound(Json.obj(
-            "code" -> "NOT_FOUND",
-            "reason" -> s"No data exists for journey ID: $journeyId"
-          )))
         }
       }
   }
@@ -83,17 +85,23 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
 
   def updateJourneyData(journeyId: String, dataKey: String): Action[JsValue] = Action.async(parse.json) {
     implicit req =>
-      authorised().retrieve(internalId) { internalId =>
-        journeyDataService.updateJourneyData(journeyId, dataKey, req.body).flatMap(
-          _ => {
-            journeyDataService.getStoredAuthInternalId(journeyId).map {
-              authInternalId =>
-                if (authInternalId == internalId) Ok
-                else Forbidden(Json.obj("code" -> FORBIDDEN,
-                  "reason" -> "Auth Internal IDs do not match"))
-            }
+      authorised().retrieve(internalId) {
+        internalId =>
+          journeyDataService.getStoredAuthInternalId(journeyId).flatMap {
+            case authInternalId@Some(_) if authInternalId == internalId =>
+                journeyDataService.updateJourneyData(journeyId, dataKey, req.body).map {
+                  _ => Ok
+                }
+            case Some(_) =>
+                Future.successful(
+                  Forbidden(Json.obj("code" -> FORBIDDEN,
+                    "reason" -> "Auth Internal IDs do not match"
+                  ))
+                )
+            case None =>
+              throw new InternalServerException(s"Journey ID: $journeyId does not exist in the database")
           }
-        )
       }
   }
+
 }
