@@ -22,6 +22,7 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, Writes}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
+import uk.gov.hmrc.http.logging.Authorization
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -29,6 +30,11 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient, appCo
                                                         (implicit ec: ExecutionContext) {
 
   def register(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+
+    val headerCarrier = hc
+      .withExtraHeaders(appConfig.desEnvironmentHeader)
+      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
+
     val jsonBody: JsObject =
       Json.obj(
         "company" ->
@@ -40,7 +46,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient, appCo
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](appConfig.getRegisterWithMultipleIdentifiersUrl, jsonBody)(
       implicitly[Writes[JsObject]],
       RegisterWithMultipleIdentifiersHttpReads,
-      hc,
+      headerCarrier,
       ec)
   }
 
