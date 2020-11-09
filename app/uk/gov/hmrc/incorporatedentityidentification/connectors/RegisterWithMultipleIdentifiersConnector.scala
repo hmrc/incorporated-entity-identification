@@ -73,7 +73,9 @@ object RegisterWithMultipleIdentifiersHttpParser {
             case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
           }
         case _ =>
-          throw new InternalServerException(s"Invalid response on Register API: ${response.status}, ${response.body}")
+          throw new InternalServerException(
+            s"Invalid response on Register API with status: ${response.status}, body: ${response.body} and headers: ${response.headers}"
+          )
       }
     }
   }
