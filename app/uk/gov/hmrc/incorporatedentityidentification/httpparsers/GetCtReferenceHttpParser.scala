@@ -37,7 +37,7 @@ object GetCtReferenceHttpParser {
         case NOT_FOUND =>
           None
         case status =>
-          throw new InternalServerException(s"Get CT Reference failed with status: $status")
+          throw new InternalServerException(s"Get CT Reference failed with status: $status, body: ${response.body} and headers: ${response.headers}")
       }
     }
   }
