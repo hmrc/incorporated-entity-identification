@@ -20,11 +20,11 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Writes
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
-import play.api.{Application, Environment, Mode}
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with CustomMatchers
@@ -34,9 +34,8 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with GuiceOneServerPerSuite {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
-    .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
-    .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")
+    .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
     .build
 
   val mockHost: String = WiremockHelper.wiremockHost
