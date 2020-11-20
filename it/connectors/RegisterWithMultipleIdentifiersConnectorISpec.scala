@@ -23,17 +23,33 @@ import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersSuccess
+import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{DesStub, FeatureSwitching}
 import utils.ComponentSpecHelper
 
-class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper with AuthStub with RegisterWithMultipleIdentifiersStub {
+class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper with AuthStub with RegisterWithMultipleIdentifiersStub with FeatureSwitching {
   lazy val connector: RegisterWithMultipleIdentifiersConnector = app.injector.instanceOf[RegisterWithMultipleIdentifiersConnector]
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
-  "registerWithMultipleIdentifiers" should {
-    "return OK with status Registered and the SafeId" when {
-      "the Registration was a success" in {
-        stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
-        val result = connector.register(testCompanyNumber, testCtutr)
-        await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+  "registerWithMultipleIdentifiers" when {
+    s"the $DesStub feature switch is disabled" when {
+      "return OK with status Registered and the SafeId" when {
+        "the Registration was a success on the Register API" in {
+          disable(DesStub)
+
+          stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
+          val result = connector.register(testCompanyNumber, testCtutr)
+          await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+        }
+      }
+    }
+    s"the $DesStub feature switch is enabled" when {
+      "return OK with status Registered and the SafeId" when {
+        "the Registration was a success on the Register API stub" in {
+          enable(DesStub)
+
+          stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
+          val result = connector.register(testCompanyNumber, testCtutr)
+          await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+        }
       }
     }
   }

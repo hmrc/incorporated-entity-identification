@@ -22,30 +22,44 @@ import play.api.test.Helpers._
 import stubs.{AuthStub, GetCtReferenceStub}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
+import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitching, StubGetCtReference}
 import utils.ComponentSpecHelper
 
-class GetCtReferenceConnectorISpec extends ComponentSpecHelper with AuthStub with GetCtReferenceStub{
+class GetCtReferenceConnectorISpec extends ComponentSpecHelper with AuthStub with GetCtReferenceStub with FeatureSwitching {
 
   lazy val connector: GetCtReferenceConnector = app.injector.instanceOf[GetCtReferenceConnector]
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  "getCtReference" should {
-    "return the CT reference" in {
-      stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
-      val res = connector.getCtReference(testCompanyNumber)
+  "getCtReference" when {
+    s"the $StubGetCtReference feature switch is disabled" should {
+      "return the CT reference from the Get CT Reference API where it exists" in {
+        disable(StubGetCtReference)
 
-      await(res) mustBe Some(testCtutr)
+        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
+        val res = connector.getCtReference(testCompanyNumber)
+
+        await(res) mustBe Some(testCtutr)
+      }
+
+      "return not found when the Get CT Reference API returns not found" in {
+        disable(StubGetCtReference)
+
+        stubGetCtReference(testCompanyNumber)(status = NOT_FOUND)
+        val res = connector.getCtReference(testCompanyNumber)
+
+        await(res) mustBe None
+      }
+    }
+    s"the $StubGetCtReference feature switch is enabled" should {
+      "call the stubbed Get CT Reference API" in {
+        enable(StubGetCtReference)
+
+        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
+        val res = connector.getCtReference(testCompanyNumber)
+
+        await(res) mustBe Some(testCtutr)
+      }
     }
   }
-
-  "getCtReference" should {
-    "return not found" in {
-      stubGetCtReference(testCompanyNumber)(status = NOT_FOUND)
-      val res = connector.getCtReference("000000000")
-
-      await(res) mustBe None
-    }
-  }
-
 }
