@@ -27,31 +27,24 @@ class JourneyDataService @Inject()(incorporatedEntityIdentificationRepository: J
                                    journeyIdGenerationService: JourneyIdGenerationService
                                   )(implicit ec: ExecutionContext) {
 
-  def createJourney(authInternalId: Option[String]): Future[String] = {
+  def createJourney(authInternalId: String): Future[String] = {
     val journeyId = journeyIdGenerationService.generateJourneyId()
     incorporatedEntityIdentificationRepository.createJourney(journeyId, authInternalId)
   }
 
-  def getJourneyData(journeyId: String): Future[Option[JsObject]] = {
-    incorporatedEntityIdentificationRepository.getJourneyData(journeyId)
+  def getJourneyData(journeyId: String, authInternalId: String): Future[Option[JsObject]] = {
+    incorporatedEntityIdentificationRepository.getJourneyData(journeyId, authInternalId)
   }
 
-  def getJourneyData(journeyId: String, dataKey: String): Future[Option[JsValue]] = {
-    incorporatedEntityIdentificationRepository.getJourneyData(journeyId).map {
+  def getJourneyDataByKey(journeyId: String, dataKey: String, authInternalId: String): Future[Option[JsValue]] = {
+    incorporatedEntityIdentificationRepository.getJourneyData(journeyId, authInternalId).map {
       case Some(json) => (json \ dataKey).asOpt[JsValue]
       case None => None
     }
   }
 
-  def getStoredAuthInternalId(journeyId: String): Future[Option[String]] = {
-    incorporatedEntityIdentificationRepository.getJourneyData(journeyId).map {
-      case Some(json) => (json \ "authInternalId").asOpt[String]
-      case None => None
-    }
+  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Any] = {
+    incorporatedEntityIdentificationRepository.updateJourneyData(journeyId, dataKey, data, authInternalId)
   }
-
-  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue): Future[Any] =
-    incorporatedEntityIdentificationRepository.updateJourneyData(journeyId: String, dataKey: String, data: JsValue)
-      .filter(_.n == 1)
 
 }

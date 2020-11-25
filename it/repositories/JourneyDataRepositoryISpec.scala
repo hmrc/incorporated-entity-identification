@@ -29,7 +29,7 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 
   val repo: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
-  override def beforeEach: Unit = {
+  override def beforeEach(): Unit = {
     super.beforeEach()
     await(repo.drop)
   }
@@ -39,32 +39,32 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 
   "createJourney" should {
     "successfully insert the journeyId" in {
-      repo.createJourney(testJourneyId, None)
+      repo.createJourney(testJourneyId, testInternalId)
       await(repo.findById(testJourneyId)) mustBe Some(IncorporatedEntityIdentificationModel(testJourneyId))
     }
   }
   s"getJourneyData($testJourneyId)" should {
     "successfully return all data" in {
-      await(repo.createJourney(testJourneyId, Some(testInternalId)))
-      await(repo.getJourneyData(testJourneyId)).map(_.-(creationTimestampKey)) mustBe Some(Json.obj(authInternalIdKey -> testInternalId))
+      await(repo.createJourney(testJourneyId, testInternalId))
+      await(repo.getJourneyData(testJourneyId, testInternalId)).map(_.-(creationTimestampKey)) mustBe Some(Json.obj(authInternalIdKey -> testInternalId))
     }
   }
   "updateJourneyData" should {
     "successfully insert data" in {
       val testKey = "testKey"
       val testData = "test"
-      await(repo.createJourney(testJourneyId, Some(testInternalId)))
-      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData)))
-      await(repo.getJourneyData(testJourneyId, testKey)) mustBe Some(Json.obj(testKey -> testData))
+      await(repo.createJourney(testJourneyId, testInternalId))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData), testInternalId))
+      await(repo.getJourneyData(testJourneyId, testInternalId)).map(json => (json \ testKey).as[String]) mustBe Some(testData)
     }
     "successfully update data when data is already stored against a key" in {
       val testKey = "testKey"
       val testData = "test"
-      val updateData = "updated"
-      await(repo.createJourney(testJourneyId, Some(testInternalId)))
-      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData)))
-      await(repo.updateJourneyData(testJourneyId, testKey, JsString(updateData)))
-      await(repo.getJourneyData(testJourneyId, testKey)) mustBe Some(Json.obj(testKey -> updateData))
+      val updatedData = "updated"
+      await(repo.createJourney(testJourneyId, testInternalId))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData), testInternalId))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(updatedData), testInternalId))
+      await(repo.getJourneyData(testJourneyId, testInternalId)).map(json => (json \ testKey).as[String]) mustBe Some(updatedData)
     }
 
   }

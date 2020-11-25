@@ -43,47 +43,38 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     idFormat = implicitly[Format[String]]
   ) {
 
-  def createJourney(journeyId: String, internalId: Option[String]): Future[String] =
+  def createJourney(journeyId: String, authInternalId: String): Future[String] =
     collection.insert(true).one(
       Json.obj(
         journeyIdKey -> journeyId,
-        authInternalIdKey -> internalId,
+        authInternalIdKey -> authInternalId,
         "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
       )
     ).map(_ => journeyId)
 
-  def getJourneyData(journeyId: String): Future[Option[JsObject]] =
+  def getJourneyData(journeyId: String, authInternalId: String): Future[Option[JsObject]] =
     collection.find(
       Json.obj(
-        journeyIdKey -> journeyId
+        journeyIdKey -> journeyId,
+        authInternalIdKey -> authInternalId
       ),
       Some(Json.obj(
         journeyIdKey -> 0
       ))
     ).one[JsObject]
 
-  def getJourneyData(journeyId: String, dataKey: String): Future[Option[JsObject]] =
-    collection.find(
-      Json.obj(
-        journeyIdKey -> journeyId
-      ),
-      Some(Json.obj(
-        journeyIdKey -> 0,
-        dataKey -> 1
-      ))
-    ).one[JsObject]
-
-  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue): Future[UpdateWriteResult] =
+  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[UpdateWriteResult] =
     collection.update(true).one(
       Json.obj(
-        journeyIdKey -> journeyId
+        journeyIdKey -> journeyId,
+        authInternalIdKey -> authInternalId
       ),
       Json.obj(
         "$set" -> Json.obj(dataKey -> data)
       ),
       upsert = false,
       multi = false
-    )
+    ).filter(_.n == 1)
 
   private lazy val ttlIndex = Index(
     Seq(("creationTimestamp", IndexType.Ascending)),
