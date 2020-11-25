@@ -16,7 +16,6 @@
 
 package stubs
 
-import assets.TestConstants._
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.HeaderNames
 import play.api.libs.json.{JsObject, Json, Writes}
@@ -38,11 +37,6 @@ trait AuthStub extends WireMockMethods {
   }
 
   def successfulAuthResponse(internalId: Option[String]): JsObject = Json.obj(
-    "optionalCredentials" -> Json.obj(
-      "providerId" -> testCredentialId,
-      "providerType" -> GGProviderId
-    ),
-    "groupIdentifier" -> testGroupId,
     "internalId" -> internalId
   )
 

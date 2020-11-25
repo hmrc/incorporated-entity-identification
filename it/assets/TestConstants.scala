@@ -9,10 +9,7 @@ object TestConstants {
   val testCompanyNumber = "12345678"
   val testCompanyName = "Test Company Ltd"
   val testCtutr = "1234567890"
-  val testCredentialId = UUID.randomUUID().toString
-  val GGProviderId = UUID.randomUUID().toString
-  val testGroupId = UUID.randomUUID().toString
-  val testInternalId = UUID.randomUUID().toString
-  val testSafeId = UUID.randomUUID().toString
+  val testInternalId: String = UUID.randomUUID().toString
+  val testSafeId: String = UUID.randomUUID().toString
 
 }
