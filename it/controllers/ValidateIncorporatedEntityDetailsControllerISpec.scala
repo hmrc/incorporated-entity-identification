@@ -75,7 +75,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val result = post("/validate-details")(suppliedJson)
 
-        result.status mustBe BAD_REQUEST
+        result.status mustBe NOT_FOUND
         result.json mustBe testJson
       }
     }

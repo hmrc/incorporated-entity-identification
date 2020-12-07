@@ -41,7 +41,7 @@ class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerCompon
           case DetailsMismatched =>
             Ok(Json.obj("matched" -> false))
           case DetailsNotFound =>
-            BadRequest(Json.obj(
+            NotFound(Json.obj(
               "code" -> "NOT_FOUND",
               "reason" -> "The back end has indicated that CT UTR cannot be returned")
             )
