@@ -38,6 +38,8 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
             )
           )
         )
+      case "99999999" =>
+        Future.successful(Ok(Json.obj("CTUTR" -> "0987654321")))
       case _ =>
         Future.successful(Ok(Json.obj("CTUTR" -> "1234567890")))
     }
