@@ -115,15 +115,15 @@ Example request body:
 
 ---
 Checks if the user entered identifiers match what is held in the database.
-This endpoint is feature switched using the `Use stub for Get CT Reference` switch, which returns the same specific CTUTR. 
+This endpoint is feature switched using the `Use stub for Get CT Reference` switch, which returns a specific CTUTR based on the CRN. 
 
 ##### Request:
-Body:
+Example Body:
 
 ```
 {
-"companyNumber": 1234567890,
-"ctutr": 12345678
+"companyNumber": 12345678,
+"ctutr": 1234567890
 }
 ```
 
@@ -193,6 +193,15 @@ Stubs a call to retrieve a CTUTR from the database
 
 ##### Request:
 URI must contain a company number
+
+Company Numbers are mapped to specific CTUTRs
+
+| Company Number  | CTUTR
+|-----------------|------------------------------
+| ```12345678```  |  ```1234567890```
+| ```99999999```  |  ```0987654321```
+| ```00000000```  |  ```None```
+
 
 ##### Response:
 
