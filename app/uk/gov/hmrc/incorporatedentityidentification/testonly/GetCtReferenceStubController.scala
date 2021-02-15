@@ -16,34 +16,40 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.testonly
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class GetCtReferenceStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
-  def getCtReference(companyNumber: String): Action[AnyContent] = Action.async {
-
+  def getCtReference(companyNumber: String): Action[AnyContent] = Action {
     companyNumber match {
       case "00000000" =>
-        Future.successful(
-          NotFound(
-            Json.obj(
-              "code" -> "NOT_FOUND",
-              "reason" -> "The back end has indicated that CT UTR cannot be returned"
-            )
+        NotFound(
+          Json.obj(
+            "code" -> "NOT_FOUND",
+            "reason" -> "The back end has indicated that CT UTR cannot be returned"
           )
         )
+      case crn if e2eTestData.contains(crn) =>
+        Ok(Json.obj("CTUTR" -> e2eTestData(crn)))
       case "99999999" =>
-        Future.successful(Ok(Json.obj("CTUTR" -> "0987654321")))
+        Ok(Json.obj("CTUTR" -> "0987654321"))
       case _ =>
-        Future.successful(Ok(Json.obj("CTUTR" -> "1234567890")))
+        Ok(Json.obj("CTUTR" -> "1234567890"))
     }
-
   }
 
+  //To be removed after E2E testing
+  val e2eTestData = Map(
+    "99999991" -> "1044814810",
+    "99999992" -> "8851208889",
+    "99999993" -> "2251904531",
+    "99999994" -> "8754000033",
+    "99999995" -> "8901324101",
+    "99999996" -> "7033600713"
+  )
 }
