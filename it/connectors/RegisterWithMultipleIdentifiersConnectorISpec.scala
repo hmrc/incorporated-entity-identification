@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 HM Revenue & Customs
+ * Copyright 2021 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package connectors
 
-import assets.TestConstants.{testCompanyNumber, testCtutr, testInternalId, testSafeId}
-import play.api.libs.json.Json
+import assets.TestConstants.{testCompanyNumber, testCtutr, testSafeId}
 import play.api.test.Helpers._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import uk.gov.hmrc.http.HeaderCarrier
