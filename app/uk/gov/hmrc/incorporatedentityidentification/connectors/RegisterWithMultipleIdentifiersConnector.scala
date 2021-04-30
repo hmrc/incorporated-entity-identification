@@ -22,7 +22,7 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, Writes}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
-import uk.gov.hmrc.http.logging.Authorization
+import uk.gov.hmrc.http.Authorization
 
 import scala.concurrent.{ExecutionContext, Future}
 
