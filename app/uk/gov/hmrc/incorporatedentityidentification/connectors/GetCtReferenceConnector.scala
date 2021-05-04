@@ -17,7 +17,6 @@
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.http.Authorization
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.httpparsers.GetCtReferenceHttpParser.GetCtReferenceHttpReads
@@ -30,13 +29,14 @@ class GetCtReferenceConnector @Inject()(http: HttpClient,
                                        )(implicit ec: ExecutionContext) {
 
   def getCtReference(companyNumber: String)(implicit hc: HeaderCarrier): Future[Option[String]] = {
-    val headerCarrier = hc
-      .withExtraHeaders(appConfig.desEnvironmentHeader)
-      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
+    val extraHeaders = Seq(
+      "Authorization" -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader
+    )
 
-    http.GET[Option[String]](appConfig.getCtReferenceUrl(companyNumber))(
+    http.GET[Option[String]](appConfig.getCtReferenceUrl(companyNumber), headers = extraHeaders)(
       implicitly[HttpReads[Option[String]]],
-      headerCarrier,
+      hc,
       implicitly[ExecutionContext]
     )
   }
