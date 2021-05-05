@@ -17,7 +17,7 @@
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.httpparsers.GetCtReferenceHttpParser.GetCtReferenceHttpReads
 
@@ -34,11 +34,7 @@ class GetCtReferenceConnector @Inject()(http: HttpClient,
       appConfig.desEnvironmentHeader
     )
 
-    http.GET[Option[String]](appConfig.getCtReferenceUrl(companyNumber), headers = extraHeaders)(
-      implicitly[HttpReads[Option[String]]],
-      hc,
-      implicitly[ExecutionContext]
-    )
+    http.GET[Option[String]](appConfig.getCtReferenceUrl(companyNumber), headers = extraHeaders)
   }
 
 }

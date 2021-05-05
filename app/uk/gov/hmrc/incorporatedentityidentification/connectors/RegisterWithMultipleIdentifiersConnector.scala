@@ -22,18 +22,22 @@ import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, Writes}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
-import uk.gov.hmrc.http.Authorization
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient, appConfig: AppConfig)
-                                                        (implicit ec: ExecutionContext) {
+class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
+                                                         appConfig: AppConfig
+                                                        )(implicit ec: ExecutionContext) {
 
-  def register(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def register(companyNumber: String,
+               ctutr: String
+              )(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
 
-    val headerCarrier = hc
-      .withExtraHeaders(appConfig.desEnvironmentHeader)
-      .copy(authorization = Some(Authorization(appConfig.desAuthorisationToken)))
+    val extraHeaders = Seq(
+      "Authorization" -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader,
+      "Content-Type" -> "application/json"
+    )
 
     val jsonBody: JsObject =
       Json.obj(
@@ -43,11 +47,18 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient, appCo
             "ctutr" -> ctutr
           )
       )
-    http.POST[JsObject, RegisterWithMultipleIdentifiersResult](appConfig.getRegisterWithMultipleIdentifiersUrl, jsonBody)(
+
+    http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
+      url = appConfig.getRegisterWithMultipleIdentifiersUrl,
+      headers = extraHeaders,
+      body = jsonBody
+    )(
       implicitly[Writes[JsObject]],
       RegisterWithMultipleIdentifiersHttpReads,
-      headerCarrier,
-      ec)
+      hc,
+      ec
+    )
+
   }
 
 }
