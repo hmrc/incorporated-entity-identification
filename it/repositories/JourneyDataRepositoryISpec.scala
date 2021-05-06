@@ -39,7 +39,7 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 
   "createJourney" should {
     "successfully insert the journeyId" in {
-      repo.createJourney(testJourneyId, testInternalId)
+      await(repo.createJourney(testJourneyId, testInternalId))
       await(repo.findById(testJourneyId)) mustBe Some(IncorporatedEntityIdentificationModel(testJourneyId))
     }
   }
