@@ -30,7 +30,7 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
 
-        val jsonBody = Json.obj(
+        val  jsonBody = Json.obj(
           "company" ->
             Json.obj(
               "crn" -> testCompanyNumber,
@@ -48,7 +48,7 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.json mustBe resultJson
       }
     }
-    "return OK with status Registration_Failed" when {
+    "return REGISTRATION_FAILED" when {
       "the Registration was not successful" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubRegisterWithMultipleIdentifiersFailure(testCompanyNumber, testCtutr)(BAD_REQUEST)
@@ -61,8 +61,13 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
             )
         )
 
+        val resultJson = Json.obj(
+          "registration" -> Json.obj(
+            "registrationStatus" -> "REGISTRATION_FAILED"))
+
         val result = post("/register")(jsonBody)
-        result.status mustBe INTERNAL_SERVER_ERROR
+        result.status mustBe OK
+        result.json mustBe resultJson
       }
     }
   }
