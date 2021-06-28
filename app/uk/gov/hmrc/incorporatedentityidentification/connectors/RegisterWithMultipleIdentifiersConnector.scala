@@ -18,10 +18,10 @@ package uk.gov.hmrc.incorporatedentityidentification.connectors
 
 import javax.inject.Inject
 import play.api.http.Status.OK
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, Writes}
+import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
+import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -83,10 +83,7 @@ object RegisterWithMultipleIdentifiersHttpParser {
             case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
             case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
           }
-        case _ =>
-          throw new InternalServerException(
-            s"Invalid response on Register API with status: ${response.status}, body: ${response.body} and headers: ${response.headers}"
-          )
+        case _ => RegisterWithMultipleIdentifiersFailure(response.status, response.body)
       }
     }
   }
