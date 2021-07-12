@@ -66,7 +66,29 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
       await(repo.updateJourneyData(testJourneyId, testKey, JsString(updatedData), testInternalId))
       await(repo.getJourneyData(testJourneyId, testInternalId)).map(json => (json \ testKey).as[String]) mustBe Some(updatedData)
     }
+  }
+  "removeJourneyDataField" should {
+    "successfully remove a field" in {
+      val testKey = "testKey"
+      val testData = "test"
 
+      await(repo.createJourney(testJourneyId, testInternalId))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData), testInternalId))
+      await(repo.removeJourneyDataField(testJourneyId, testInternalId, testKey))
+      await(repo.getJourneyData(testJourneyId, testInternalId)).map(_.-(creationTimestampKey)) mustBe Some(Json.obj(authInternalIdKey -> testInternalId))
+
+    }
+    "pass successfully when the field is not present" in {
+      val testKey = "testKey"
+      val testData = "test"
+      val testSecondKey = "secondKey"
+
+      await(repo.createJourney(testJourneyId, testInternalId))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData), testInternalId))
+      await(repo.removeJourneyDataField(testJourneyId, testInternalId, testSecondKey))
+      await(repo.getJourneyData(testJourneyId, testInternalId)).map(_.-(creationTimestampKey)) mustBe
+        Some(Json.obj(authInternalIdKey -> testInternalId, testKey -> testData))
+    }
   }
 
 }

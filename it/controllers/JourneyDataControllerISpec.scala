@@ -254,4 +254,50 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
       }
     }
   }
+
+  "DELETE /journey/:journeyId/:dataKey" when {
+    "there is a journey for the provided journey ID" should {
+      "remove the data with the provided data key" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        val testDataKey = "testDataKey"
+        val testDataValue = "testDataValue"
+
+        insertById(testJourneyId, testInternalId, Json.obj(testDataKey -> testDataValue))
+
+        val res = delete(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe NO_CONTENT
+
+        findById(testJourneyId) mustBe Some(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "authInternalId" -> testInternalId
+          )
+        )
+      }
+    }
+    "there is no journey for the provided journey ID" should {
+      "return Internal Server Error" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        val testDataKey = "testDataKey"
+
+        val res = delete(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe INTERNAL_SERVER_ERROR
+
+        findById(testJourneyId) mustBe None
+      }
+    }
+    "the user cannot be authorised" should {
+      "return Unauthorised" in {
+        stubAuthFailure()
+
+        val testDataKey = "testDataKey"
+
+        val res = delete(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe UNAUTHORIZED
+      }
+    }
+  }
 }

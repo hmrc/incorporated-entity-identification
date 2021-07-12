@@ -90,6 +90,10 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     )
   }
 
+  def delete[T](uri: String): WSResponse = {
+    await(buildClient(uri).delete())
+  }
+
   val baseUrl: String = "/incorporated-entity-identification"
 
   private def buildClient(path: String): WSRequest =

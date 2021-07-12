@@ -102,4 +102,19 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
       await(TestJourneyDataService.updateJourneyData(testJourneyId, testKey, testValue, testInternalId)) mustBe writeResult
     }
   }
+
+  "removeJourneyDataField" should {
+    "delete the specified field" in {
+      val testKey = "testKey"
+      val testValue = JsString("testValue")
+
+      val writeResult = mock[UpdateWriteResult]
+
+      mockJourneyDataRepository.createJourney(eqTo(testJourneyId), eqTo(testInternalId)) returns Future.successful(testJourneyId)
+      mockJourneyDataRepository.updateJourneyData(testJourneyId, testKey, testValue, testInternalId) returns Future.successful(writeResult)
+      mockJourneyDataRepository.removeJourneyDataField(testJourneyId, testInternalId, testKey) returns Future.successful(writeResult)
+
+      await(TestJourneyDataService.removeJourneyDataField(testJourneyId, testInternalId, testKey)) mustBe writeResult
+    }
+  }
 }

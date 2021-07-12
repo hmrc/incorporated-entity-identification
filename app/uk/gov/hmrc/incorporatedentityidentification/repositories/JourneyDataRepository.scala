@@ -16,9 +16,6 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.repositories
 
-import java.time.Instant
-
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.api.commands.UpdateWriteResult
@@ -30,6 +27,8 @@ import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIde
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.{authInternalIdKey, _}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
+import java.time.Instant
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -71,6 +70,19 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       ),
       Json.obj(
         "$set" -> Json.obj(dataKey -> data)
+      ),
+      upsert = false,
+      multi = false
+    ).filter(_.n == 1)
+
+  def removeJourneyDataField(journeyId: String, authInternalId: String, dataKey: String): Future[UpdateWriteResult] =
+    collection.update(true).one(
+      Json.obj(
+        journeyIdKey -> journeyId,
+        authInternalIdKey -> authInternalId
+      ),
+      Json.obj(
+        "$unset" -> Json.obj(dataKey -> 1)
       ),
       upsert = false,
       multi = false
