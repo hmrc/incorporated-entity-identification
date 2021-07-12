@@ -7,6 +7,8 @@ GET         /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidenti
 
 PUT         /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.updateJourneyData(journeyId, dataKey)
 
+DELETE      /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.removeJourneyDataField(journeyId, dataKey)
+
 POST        /validate-details               uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
 
 POST        /register                       uk.gov.hmrc.incorporatedentityidentification.controllers.RegisterBusinessEntityController.register()

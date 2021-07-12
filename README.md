@@ -111,6 +111,28 @@ Example request body:
 | ```OK(200)```                           |  ```OK```       
 | ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
 
+#### DELETE /journey/:journeyId/:dataKey
+
+---
+Removes the data that is stored against the dataKey provided for the specific journeyId
+
+##### Request:
+Requires a valid journeyId and dataKey
+
+Example request URI:
+`testJourneyId = <random UUID>`
+```
+/journey/remove/testJourneyId/nino
+```
+
+##### Response:
+
+| Expected Status                         | Reason
+|-----------------------------------------|------------------------------
+| ```NO_CONTENT(204)```                   |  ```Field successfully deleted from database```
+| ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
+
+
 #### POST /validate-details 
 
 ---

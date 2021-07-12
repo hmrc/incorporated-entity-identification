@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
@@ -24,6 +23,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyDataService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -83,6 +83,18 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
         case Some(internalId) =>
           journeyDataService.updateJourneyData(journeyId, dataKey, req.body, internalId).map {
             _ => Ok
+          }
+        case None =>
+          Future.successful(Unauthorized)
+      }
+  }
+
+  def removeJourneyDataField(journeyId: String, dataKey: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised().retrieve(internalId) {
+        case Some(internalId) =>
+          journeyDataService.removeJourneyDataField(journeyId, internalId, dataKey).map {
+            _ => NoContent
           }
         case None =>
           Future.successful(Unauthorized)
