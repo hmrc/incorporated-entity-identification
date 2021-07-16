@@ -32,12 +32,12 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
                                                  val authConnector: AuthConnector
                                                 )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
 
-  def register(): Action[JsValue] = Action.async(parse.json) {
+  def registerCompany(): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authorised() {
-        val crn = (request.body \ "company" \ "crn").as[String]
-        val ctutr = (request.body \ "company" \ "ctutr").as[String]
-        registerWithMultipleIdentifiersService.register(crn, ctutr).map {
+        val crn = (request.body \"company" \"crn").as[String]
+        val ctutr = (request.body\"company"  \"ctutr").as[String]
+        registerWithMultipleIdentifiersService.registerCompany(crn, ctutr).map {
           case RegisterWithMultipleIdentifiersSuccess(safeId) =>
             Ok(Json.obj(
               "registration" -> Json.obj(
@@ -48,9 +48,42 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
               "registration" -> Json.obj(
                 "registrationStatus" -> "REGISTRATION_FAILED")))
         }
-
       }
-
   }
-
+  def registerLimitedCompany(): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authorised() {
+        val crn = (request.body \"crn").as[String]
+        val ctutr = (request.body  \"ctutr").as[String]
+        registerWithMultipleIdentifiersService.registerLimitedCompany(crn, ctutr).map {
+          case RegisterWithMultipleIdentifiersSuccess(safeId) =>
+            Ok(Json.obj(
+              "registration" -> Json.obj(
+                "registrationStatus" -> "REGISTERED",
+                "registeredBusinessPartnerId" -> safeId)))
+          case RegisterWithMultipleIdentifiersFailure(status, body) =>
+            Ok(Json.obj(
+              "registration" -> Json.obj(
+                "registrationStatus" -> "REGISTRATION_FAILED")))
+        }
+      }
+  }
+  def registerRegisteredSociety(): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      authorised() {
+        val crn = (request.body \ "crn").as[String]
+        val ctutr = (request.body \ "ctutr").as[String]
+        registerWithMultipleIdentifiersService.registerRegisteredSociety(crn, ctutr).map {
+          case RegisterWithMultipleIdentifiersSuccess(safeId) =>
+            Ok(Json.obj(
+              "registration" -> Json.obj(
+                "registrationStatus" -> "REGISTERED",
+                "registeredBusinessPartnerId" -> safeId)))
+          case RegisterWithMultipleIdentifiersFailure(status, body) =>
+            Ok(Json.obj(
+              "registration" -> Json.obj(
+                "registrationStatus" -> "REGISTRATION_FAILED")))
+        }
+      }
+  }
 }

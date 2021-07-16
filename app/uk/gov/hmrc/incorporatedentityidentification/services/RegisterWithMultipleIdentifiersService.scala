@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.services
 
+import play.api.libs.json.{JsObject, Json}
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
@@ -26,7 +28,35 @@ import scala.concurrent.Future
 @Singleton
 class RegisterWithMultipleIdentifiersService @Inject()(registerWithMultipleIdentifiersConnector: RegisterWithMultipleIdentifiersConnector) {
 
-  def register(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] =
-    registerWithMultipleIdentifiersConnector.register(companyNumber, ctutr)
+  def registerCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+    val jsonBody: JsObject =
+      Json.obj(
+        "company" ->
+          Json.obj(
+            "crn" -> companyNumber,
+            "ctutr" -> ctutr
+          )
+      )
 
+      registerWithMultipleIdentifiersConnector.register(jsonBody)
+    }
+
+  def registerLimitedCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+    val jsonBody: JsObject =
+          Json.obj(
+            "crn" -> companyNumber,
+            "ctutr" -> ctutr
+          )
+    registerWithMultipleIdentifiersConnector.register(jsonBody)
+  }
+
+  def registerRegisteredSociety(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+    val jsonBody: JsObject =
+          Json.obj(
+            "crn" -> companyNumber,
+            "ctutr" -> ctutr
+          )
+
+    registerWithMultipleIdentifiersConnector.register(jsonBody)
+  }
 }

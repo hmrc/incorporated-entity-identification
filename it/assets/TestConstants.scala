@@ -16,6 +16,8 @@
 
 package assets
 
+import play.api.libs.json.{JsObject, Json}
+
 import java.util.UUID
 
 object TestConstants {
@@ -26,5 +28,11 @@ object TestConstants {
   val testCtutr = "1234567890"
   val testInternalId: String = UUID.randomUUID().toString
   val testSafeId: String = UUID.randomUUID().toString
-
+  val testCompanyjsonBody: JsObject = Json.obj(
+      "company" ->
+        Json.obj(
+          "crn" -> testCompanyNumber,
+          "ctutr" -> testCtutr
+        )
+    )
 }
