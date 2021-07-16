@@ -16,21 +16,20 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
-import javax.inject.Inject
 import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
                                                          appConfig: AppConfig
                                                         )(implicit ec: ExecutionContext) {
 
-  def register(jsonBody: JsObject
-              )(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def register(jsonBody: JsObject)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
 
     val extraHeaders = Seq(
       "Authorization" -> appConfig.desAuthorisationToken,
