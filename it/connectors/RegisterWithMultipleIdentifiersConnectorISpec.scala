@@ -28,6 +28,7 @@ import utils.ComponentSpecHelper
 class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper with AuthStub with RegisterWithMultipleIdentifiersStub with FeatureSwitching {
   lazy val connector: RegisterWithMultipleIdentifiersConnector = app.injector.instanceOf[RegisterWithMultipleIdentifiersConnector]
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+
   "registerWithMultipleIdentifiers" when {
     s"the $DesStub feature switch is disabled" when {
       "return OK with status Registered and the SafeId" when {
@@ -40,6 +41,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         }
       }
     }
+
     s"the $DesStub feature switch is enabled" when {
       "return OK with status Registered and the SafeId" when {
         "the Registration was a success on the Register API stub" in {

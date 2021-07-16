@@ -39,13 +39,14 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
     )
 
   def stubRegisterCompanyWithMultipleIdentifiersSuccess(companyNumber: String, ctutr: String)(status: Int, safeId: String): StubMapping = {
-    val postBody =Json.obj(
+    val postBody = Json.obj(
       "company" ->
         Json.obj(
           "crn" -> companyNumber,
           "ctutr" -> ctutr
         )
     )
+
     when(method = POST, uri = "/cross-regime/register/VATC", postBody)
       .thenReturn(
         status = status,
@@ -54,23 +55,30 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
   }
 
   def stubRegisterCompanyWithMultipleIdentifiersFailure(companyNumber: String, ctutr: String)(status: Int): StubMapping = {
-    val postBody =Json.obj(
+    val postBody = Json.obj(
       "company" ->
         Json.obj(
           "crn" -> companyNumber,
           "ctutr" -> ctutr
         )
     )
+
     when(method = POST, uri = "/cross-regime/register/VATC", postBody)
       .thenReturn(
         status = status,
         body = registerResponseFailureBody()
       )
   }
+
   def stubRegisterLimitedCompanyWithMultipleIdentifiersSuccess(companyNumber: String, ctutr: String)(status: Int, safeId: String): StubMapping = {
-    val postBody =
-      Json.obj("crn" -> companyNumber,
-        "ctutr" -> ctutr)
+    val postBody = Json.obj(
+      "company" ->
+        Json.obj(
+          "crn" -> companyNumber,
+          "ctutr" -> ctutr
+        )
+    )
+
     when(method = POST, uri = "/cross-regime/register/VATC", postBody)
       .thenReturn(
         status = status,
@@ -79,19 +87,30 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
   }
 
   def stubRegisterLimitedCompanyWithMultipleIdentifiersFailure(companyNumber: String, ctutr: String)(status: Int): StubMapping = {
-    val postBody =
-      Json.obj("crn" -> companyNumber,
-        "ctutr" -> ctutr)
+    val postBody = Json.obj(
+      "company" ->
+        Json.obj(
+          "crn" -> companyNumber,
+          "ctutr" -> ctutr
+        )
+    )
+
     when(method = POST, uri = "/cross-regime/register/VATC", postBody)
       .thenReturn(
         status = status,
         body = registerResponseFailureBody()
       )
   }
+
   def stubRegisterRegisteredSocietyWithMultipleIdentifiersSuccess(companyNumber: String, ctutr: String)(status: Int, safeId: String): StubMapping = {
-    val postBody =
-      Json.obj("crn" -> companyNumber,
-        "ctutr" -> ctutr)
+    val postBody = Json.obj(
+      "registeredSociety" ->
+        Json.obj(
+          "crn" -> companyNumber,
+          "ctutr" -> ctutr
+        )
+    )
+
     when(method = POST, uri = "/cross-regime/register/VATC", postBody)
       .thenReturn(
         status = status,
@@ -100,9 +119,14 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
   }
 
   def stubRegisterRegisteredSocietyWithMultipleIdentifiersFailure(companyNumber: String, ctutr: String)(status: Int): StubMapping = {
-    val postBody =
-      Json.obj("crn" -> companyNumber,
-        "ctutr" -> ctutr)
+    val postBody = Json.obj(
+      "registeredSociety" ->
+        Json.obj(
+          "crn" -> companyNumber,
+          "ctutr" -> ctutr
+        )
+    )
+
     when(method = POST, uri = "/cross-regime/register/VATC", postBody)
       .thenReturn(
         status = status,
