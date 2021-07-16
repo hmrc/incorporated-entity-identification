@@ -16,7 +16,7 @@
 
 package connectors
 
-import assets.TestConstants.{testCompanyNumber, testCtutr, testSafeId}
+import assets.TestConstants.{testCompanyNumber, testCompanyjsonBody, testCtutr, testSafeId}
 import play.api.test.Helpers._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -34,8 +34,8 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         "the Registration was a success on the Register API" in {
           disable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
-          val result = connector.register(testCompanyNumber, testCtutr)
+          stubRegisterCompanyWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
+          val result = connector.register(testCompanyjsonBody)
           await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
         }
       }
@@ -45,8 +45,8 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         "the Registration was a success on the Register API stub" in {
           enable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
-          val result = connector.register(testCompanyNumber, testCtutr)
+          stubRegisterCompanyWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
+          val result = connector.register(testCompanyjsonBody)
           await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
         }
       }
