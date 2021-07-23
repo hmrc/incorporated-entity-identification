@@ -11,8 +11,6 @@ DELETE      /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidenti
 
 POST        /validate-details               uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
 
-POST        /register                       uk.gov.hmrc.incorporatedentityidentification.controllers.RegisterBusinessEntityController.registerCompany()
-
 POST        /register-limited-company       uk.gov.hmrc.incorporatedentityidentification.controllers.RegisterBusinessEntityController.registerLimitedCompany()
 
 POST        /register-registered-society    uk.gov.hmrc.incorporatedentityidentification.controllers.RegisterBusinessEntityController.registerRegisteredSociety()

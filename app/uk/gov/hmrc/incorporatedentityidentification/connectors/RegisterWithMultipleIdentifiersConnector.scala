@@ -20,7 +20,7 @@ import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
+import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser._
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,7 +29,46 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
                                                          appConfig: AppConfig
                                                         )(implicit ec: ExecutionContext) {
 
-  def register(jsonBody: JsObject)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerLimitedCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+
+    val jsonBody: JsObject =
+      Json.obj(
+        "company" ->
+          Json.obj(
+            "crn" -> companyNumber,
+            "ctutr" -> ctutr
+          )
+      )
+
+    val extraHeaders = Seq(
+      "Authorization" -> appConfig.desAuthorisationToken,
+      appConfig.desEnvironmentHeader,
+      "Content-Type" -> "application/json"
+    )
+
+    http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
+      url = appConfig.getRegisterWithMultipleIdentifiersUrl,
+      headers = extraHeaders,
+      body = jsonBody
+    )(
+      implicitly[Writes[JsObject]],
+      RegisterWithMultipleIdentifiersHttpReads,
+      hc,
+      ec
+    )
+
+  }
+
+
+  def registerRegisteredSociety(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+    val jsonBody: JsObject =
+      Json.obj(
+        "registeredSociety" ->
+          Json.obj(
+            "crn" -> companyNumber,
+            "ctutr" -> ctutr
+          )
+      )
 
     val extraHeaders = Seq(
       "Authorization" -> appConfig.desAuthorisationToken,

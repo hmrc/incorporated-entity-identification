@@ -16,7 +16,7 @@
 
 package controllers
 
-import assets.TestConstants.{testCompanyNumber, testCtutr, testInternalId, testSafeId}
+import assets.TestConstants._
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
@@ -24,53 +24,11 @@ import utils.ComponentSpecHelper
 
 class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with AuthStub with RegisterWithMultipleIdentifiersStub {
 
-  "POST /register" should {
-    "return OK with status Registered and the SafeId" when {
-      "the Registration was a success" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterCompanyWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
-        val jsonBody = Json.obj(
-          "company" ->
-            Json.obj(
-              "crn" -> testCompanyNumber,
-              "ctutr" -> testCtutr
-            )
-        )
-        val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTERED",
-            "registeredBusinessPartnerId" -> testSafeId))
-
-        val result = post("/register")(jsonBody)
-        result.status mustBe OK
-        result.json mustBe resultJson
-      }
-    }
-    "return REGISTRATION_FAILED" when {
-      "the Registration was not successful" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterCompanyWithMultipleIdentifiersFailure(testCompanyNumber, testCtutr)(BAD_REQUEST)
-        val jsonBody = Json.obj(
-          "company" ->
-            Json.obj(
-              "crn" -> testCompanyNumber,
-              "ctutr" -> testCtutr
-            )
-        )
-        val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTRATION_FAILED"))
-        val result = post("/register")(jsonBody)
-        result.status mustBe OK
-        result.json mustBe resultJson
-      }
-    }
-  }
   "POST /register-limited-company" should {
     "return OK with status Registered and the SafeId" when {
       "the Registration was a success" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterLimitedCompanyWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
+        stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody)(OK, testSafeId)
         val jsonBody = Json.obj(
           "crn" -> testCompanyNumber,
           "ctutr" -> testCtutr
@@ -88,7 +46,7 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return REGISTRATION_FAILED" when {
       "the Registration was not successful" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterLimitedCompanyWithMultipleIdentifiersFailure(testCompanyNumber, testCtutr)(BAD_REQUEST)
+        stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody)(BAD_REQUEST)
         val jsonBody = Json.obj(
           "crn" -> testCompanyNumber,
           "ctutr" -> testCtutr
@@ -106,7 +64,7 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return OK with status Registered and the SafeId" when {
       "the Registration was a success" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterRegisteredSocietyWithMultipleIdentifiersSuccess(testCompanyNumber, testCtutr)(OK, testSafeId)
+        stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody)(OK, testSafeId)
         val jsonBody =
           Json.obj(
             "crn" -> testCompanyNumber,
@@ -125,7 +83,7 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return REGISTRATION_FAILED" when {
       "the Registration was not successful" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterRegisteredSocietyWithMultipleIdentifiersFailure(testCompanyNumber, testCtutr)(BAD_REQUEST)
+        stubRegisterWithMultipleIdentifiersFailure(testRegisterRegisteredSocietyJsonBody)(BAD_REQUEST)
 
         val jsonBody =
           Json.obj(

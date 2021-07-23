@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.services
 
-import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersResult
@@ -27,42 +26,10 @@ import scala.concurrent.Future
 @Singleton
 class RegisterWithMultipleIdentifiersService @Inject()(registerWithMultipleIdentifiersConnector: RegisterWithMultipleIdentifiersConnector) {
 
-  def registerCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
-    val jsonBody: JsObject =
-      Json.obj(
-        "company" ->
-          Json.obj(
-            "crn" -> companyNumber,
-            "ctutr" -> ctutr
-          )
-      )
+  def registerLimitedCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] =
+    registerWithMultipleIdentifiersConnector.registerLimitedCompany(companyNumber, ctutr)
 
-    registerWithMultipleIdentifiersConnector.register(jsonBody)
-  }
+  def registerRegisteredSociety(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] =
+    registerWithMultipleIdentifiersConnector.registerRegisteredSociety(companyNumber, ctutr)
 
-  def registerLimitedCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
-    val jsonBody: JsObject =
-      Json.obj(
-        "company" ->
-          Json.obj(
-            "crn" -> companyNumber,
-            "ctutr" -> ctutr
-          )
-      )
-
-    registerWithMultipleIdentifiersConnector.register(jsonBody)
-  }
-
-  def registerRegisteredSociety(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
-    val jsonBody: JsObject =
-      Json.obj(
-        "registeredSociety" ->
-          Json.obj(
-            "crn" -> companyNumber,
-            "ctutr" -> ctutr
-          )
-      )
-
-    registerWithMultipleIdentifiersConnector.register(jsonBody)
-  }
 }

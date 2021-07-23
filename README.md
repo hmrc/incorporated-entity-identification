@@ -12,17 +12,22 @@ This is an application to allow Limited Companies to provide their information t
  
 3. Run the backend locally using
 `sbt 'run 9719 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
+   
+### How to test the service
 
-### End-Points
-#### POST /journey
+See [TestREADME](TestREADME.md) for more information about test data and endpoints
+
+## End-Points
+
+### POST /journey
 
 ---
 Creates a new journeyId and stores it in the database
 
-##### Request:
+#### Request:
 No body is required for this request
 
-##### Response:
+#### Response:
 Status: **Created(201)**
 
 Example Response body: 
@@ -31,15 +36,15 @@ Example Response body:
 {“journeyId”: "<random UUID>"}
 ```
 
-#### GET /journey/:journeyId  
+### GET /journey/:journeyId  
 
 ---
 Retrieves all the journey data that is stored against a specific journeyID.
 
-##### Request:
+#### Request:
 A valid journeyId must be sent in the URI
 
-##### Response
+#### Response
 
 | Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
@@ -49,35 +54,38 @@ A valid journeyId must be sent in the URI
 Example response body:
 ```
 {
-"companyProfile":
-    {"companyName":"TestCompanyLtd”,
-    “companyNumber":"01234567",
-    "dateOfIncorporation":"2020-01-01"},
-"ctutr":"1234567890",
-"identifiersMatch":true,
-"businessVerification":
-    {"verificationStatus":"PASS"},
-"registration":
-    {"registrationStatus":"REGISTERED",
-    "registeredBusinessPartnerId":"X00000123456789"}
+    "companyProfile": {
+                       "companyName":"TestCompanyLtd”,
+                       “companyNumber":"01234567",
+                       "dateOfIncorporation":"2020-01-01"
+    },
+    "ctutr":"1234567890",
+    "identifiersMatch":true,
+    "businessVerification": {
+                             "verificationStatus":"PASS"
+    },
+    "registration": {
+                     "registrationStatus":"REGISTERED",
+                     "registeredBusinessPartnerId":"X00000123456789"
+    }
 }
 ```
-#### GET /journey/:journeyId/:dataKey
+### GET /journey/:journeyId/:dataKey
 
 ---
 Retrieves all the journey data that matches the dataKey for a specific journeyID.
 
-##### Request:
+#### Request:
 Example Request URI
 ```
 /journey/testJourneyId/ctutr
 ```
 
-##### Response:
+#### Response:
 
 | Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```JourneyId exists```       
+| ```OK(200)```                           | ```JourneyId exists```       
 | ```NOT_FOUND(404)```                    | ```No data exists for JourneyId or dataKey```
 | ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
 
@@ -87,12 +95,12 @@ Response body for example URI:
 {"1234567890"}
 ```
 
-#### PUT /journey/:journeyId/:dataKey
+### PUT /journey/:journeyId/:dataKey
 
 ---
 Stores the json body against the data key and journey id provided in the uri
 
-##### Request:
+#### Request:
 Requires a valid journeyId and user must be authorised to make changes to the data
 
 Example request URI:
@@ -104,19 +112,19 @@ Example request body:
 ```
 {"1234567890"}
 ```
-##### Response:
+#### Response:
 
 | Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```OK```       
+| ```OK(200)```                           | ```OK```       
 | ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
 
-#### DELETE /journey/:journeyId/:dataKey
+### DELETE /journey/:journeyId/:dataKey
 
 ---
 Removes the data that is stored against the dataKey provided for the specific journeyId
 
-##### Request:
+#### Request:
 Requires a valid journeyId and dataKey
 
 Example request URI:
@@ -125,31 +133,31 @@ Example request URI:
 /journey/remove/testJourneyId/nino
 ```
 
-##### Response:
+#### Response:
 
 | Expected Status                         | Reason
 |-----------------------------------------|------------------------------
-| ```NO_CONTENT(204)```                   |  ```Field successfully deleted from database```
+| ```NO_CONTENT(204)```                   | ```Field successfully deleted from database```
 | ```FORBIDDEN(403)```                    | ```Auth Internal IDs do not match```
 
 
-#### POST /validate-details 
+### POST /validate-details 
 
 ---
 Checks if the user entered identifiers match what is held in the database.
 This endpoint is feature switched using the `Use stub for Get CT Reference` switch, which returns a specific CTUTR based on the CRN. 
 
-##### Request:
+#### Request:
 Example Body:
 
 ```
 {
-"companyNumber": 12345678,
-"ctutr": 1234567890
+    "companyNumber": 12345678,
+    "ctutr": 1234567890
 }
 ```
 
-##### Response:
+#### Response:
 
 | Expected Status                         | Reason  
 |-----------------------------------------|------------------------------
@@ -165,25 +173,25 @@ or
 {"matched":false}
 ```
 
-#### POST /register  
+### POST /register-limited-company or /register-registered-society
 
 ___
 Submits a registration request to the downstream Register API.
 This API is feature switched behind the `Use stub for submissions to DES` switch so it can be stubbed using the Register test endpoint described below.
 
-##### Request:
+#### Request:
 Body:
 
 ```
 {
-"company": {
-            "crn": 12345678,
-            "ctutr": 1234567890
-           }
+    "crn": 12345678,
+    "ctutr": 1234567890
 }
 ```
 
-##### Response:
+Both of the endpoints require only the above identifiers to build the JSON that is sent to the downstream Registration API.
+
+#### Response:
 
 Status: **OK(200)**
 Attempted registration and returns result of call       
@@ -192,71 +200,18 @@ Attempted registration and returns result of call
 Example response bodies:
 ```
 {
-"registration":{
-                "registrationStatus":"REGISTERED",
-                "registeredBusinessPartnerId":"<randomm UUID>"
-               }
+    "registration":{
+                    "registrationStatus":"REGISTERED",
+                    "registeredBusinessPartnerId":"<randomm UUID>"
+    }
 }
 ```
 or
 ```
 {
-"registration":{
-                "registrationStatus":"REGISTRATION_FAILED",
-               }
-}
-```
-
-### Test End Points
-#### GET /test-only/corporation-tax/identifiers/crn/:companyNumber  
-
----
-Stubs a call to retrieve a CTUTR from the database
-
-##### Request:
-URI must contain a company number
-
-Company Numbers are mapped to specific CTUTRs
-
-| Company Number  | CTUTR
-|-----------------|------------------------------
-| ```12345678```  |  ```1234567890```
-| ```99999999```  |  ```0987654321```
-| ```00000000```  |  ```None```
-
-
-##### Response:
-
-| Expected Status                         | Reason  
-|-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```CTUTR found```       
-| ```NOT_FOUND(404)```                    |  ```No CTUTR found in database```  
-
-Example Response body: 
-
-```
-"{CTUTR":"1234567890}"
-```
-
-#### POST /test-only/cross-regime/register/:identifier   
-
----
-Stub for downstream Register API
-
-##### Request:
-No body is required for this request as this always returns a successful response regardless of the data sent.
-
-##### Response:
-Status: **OK(200)**
-
-Example Response body: 
-
-```
-{
-"identification":{
-                  "idType":"SAFEID",
-                  "idValue":"X00000123456789"
-                 }
+    "registration":{
+                    "registrationStatus":"REGISTRATION_FAILED",
+    }
 }
 ```
 
