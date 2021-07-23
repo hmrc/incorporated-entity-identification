@@ -32,24 +32,6 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
                                                  val authConnector: AuthConnector
                                                 )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
 
-  def registerCompany(): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      authorised() {
-        val crn = (request.body \"company" \"crn").as[String]
-        val ctutr = (request.body\"company"  \"ctutr").as[String]
-        registerWithMultipleIdentifiersService.registerCompany(crn, ctutr).map {
-          case RegisterWithMultipleIdentifiersSuccess(safeId) =>
-            Ok(Json.obj(
-              "registration" -> Json.obj(
-                "registrationStatus" -> "REGISTERED",
-                "registeredBusinessPartnerId" -> safeId)))
-          case RegisterWithMultipleIdentifiersFailure(status, body) =>
-            Ok(Json.obj(
-              "registration" -> Json.obj(
-                "registrationStatus" -> "REGISTRATION_FAILED")))
-        }
-      }
-  }
   def registerLimitedCompany(): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authorised() {
@@ -68,6 +50,7 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
         }
       }
   }
+
   def registerRegisteredSociety(): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authorised() {

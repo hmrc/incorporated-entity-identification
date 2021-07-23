@@ -28,8 +28,15 @@ object TestConstants {
   val testCtutr = "1234567890"
   val testInternalId: String = UUID.randomUUID().toString
   val testSafeId: String = UUID.randomUUID().toString
-  val testCompanyjsonBody: JsObject = Json.obj(
+  val testRegisterCompanyJsonBody: JsObject = Json.obj(
       "company" ->
+        Json.obj(
+          "crn" -> testCompanyNumber,
+          "ctutr" -> testCtutr
+        )
+    )
+  val testRegisterRegisteredSocietyJsonBody: JsObject = Json.obj(
+      "registeredSociety" ->
         Json.obj(
           "crn" -> testCompanyNumber,
           "ctutr" -> testCtutr
