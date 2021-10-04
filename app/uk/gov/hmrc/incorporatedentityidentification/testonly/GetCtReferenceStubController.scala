@@ -45,6 +45,11 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
 
   //To be removed after E2E testing
   val e2eTestData = Map(
-    "91000051" -> "8202107245"
+    "91000051" -> "8202107245",
+    "10355204" -> "3202109220",
+    "10355205" -> "1202109221",
+    "10355206" -> "1202109222",
+    "10355207" -> "8202109223",
+    "10355208" -> "6202109224"
   )
 }
