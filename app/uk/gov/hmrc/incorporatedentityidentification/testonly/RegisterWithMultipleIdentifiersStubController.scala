@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class RegisterWithMultipleIdentifiersStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
-  val registerWithMultipleIdentifiers: Action[AnyContent] = Action {
+  def registerWithMultipleIdentifiers(regime: String): Action[AnyContent] = Action {
     val stubbedSafeId = "X00000123456789"
 
     Ok(Json.obj(

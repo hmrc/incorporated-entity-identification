@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,11 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return OK with status Registered and the SafeId" when {
       "the Registration was a success" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody)(OK, testSafeId)
+        stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody, testRegime)(OK, testSafeId)
         val jsonBody = Json.obj(
           "crn" -> testCompanyNumber,
-          "ctutr" -> testCtutr
+          "ctutr" -> testCtutr,
+          "regime" -> testRegime
         )
         val resultJson = Json.obj(
           "registration" -> Json.obj(
@@ -46,10 +47,11 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return REGISTRATION_FAILED" when {
       "the Registration was not successful" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody)(BAD_REQUEST)
+        stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody, testRegime)(BAD_REQUEST)
         val jsonBody = Json.obj(
           "crn" -> testCompanyNumber,
-          "ctutr" -> testCtutr
+          "ctutr" -> testCtutr,
+          "regime" -> testRegime
         )
         val resultJson = Json.obj(
           "registration" -> Json.obj(
@@ -64,11 +66,12 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return OK with status Registered and the SafeId" when {
       "the Registration was a success" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody)(OK, testSafeId)
+        stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
         val jsonBody =
           Json.obj(
             "crn" -> testCompanyNumber,
-            "ctutr" -> testCtutr
+            "ctutr" -> testCtutr,
+            "regime" -> testRegime
           )
         val resultJson = Json.obj(
           "registration" -> Json.obj(
@@ -83,12 +86,13 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
     "return REGISTRATION_FAILED" when {
       "the Registration was not successful" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterWithMultipleIdentifiersFailure(testRegisterRegisteredSocietyJsonBody)(BAD_REQUEST)
+        stubRegisterWithMultipleIdentifiersFailure(testRegisterRegisteredSocietyJsonBody, testRegime)(BAD_REQUEST)
 
         val jsonBody =
           Json.obj(
             "crn" -> testCompanyNumber,
-            "ctutr" -> testCtutr
+            "ctutr" -> testCtutr,
+            "regime" -> testRegime
           )
 
 

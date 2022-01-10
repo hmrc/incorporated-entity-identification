@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val graphiteHost: String = config.get[String]("microservice.metrics.graphite.host")
 
   def getCtReferenceUrl(companyNumber: String): String = {
-    val baseUrl = if (isEnabled(StubGetCtReference)) desStubBaseUrl else  desBaseUrl
+    val baseUrl = if (isEnabled(StubGetCtReference)) desStubBaseUrl else desBaseUrl
     s"$baseUrl/corporation-tax/identifiers/crn/$companyNumber"
   }
 
-  def getRegisterWithMultipleIdentifiersUrl: String = {
+  def getRegisterWithMultipleIdentifiersUrl(regime: String): String = {
     val baseUrl = if (isEnabled(DesStub)) desStubBaseUrl else desBaseUrl
-    s"$baseUrl/cross-regime/register/VATC"
+    s"$baseUrl/cross-regime/register/GRS?grsRegime=$regime"
   }
 
   lazy val desBaseUrl: String = servicesConfig.getString("microservice.services.des.url")

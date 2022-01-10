@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
@@ -24,6 +23,7 @@ import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMulti
 import uk.gov.hmrc.incorporatedentityidentification.services.RegisterWithMultipleIdentifiersService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -35,9 +35,10 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
   def registerLimitedCompany(): Action[JsValue] = Action.async(parse.json) {
     implicit request =>
       authorised() {
-        val crn = (request.body \"crn").as[String]
-        val ctutr = (request.body  \"ctutr").as[String]
-        registerWithMultipleIdentifiersService.registerLimitedCompany(crn, ctutr).map {
+        val crn = (request.body \ "crn").as[String]
+        val ctutr = (request.body \ "ctutr").as[String]
+        val regime = (request.body \ "regime").as[String]
+        registerWithMultipleIdentifiersService.registerLimitedCompany(crn, ctutr, regime).map {
           case RegisterWithMultipleIdentifiersSuccess(safeId) =>
             Ok(Json.obj(
               "registration" -> Json.obj(
@@ -56,7 +57,8 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
       authorised() {
         val crn = (request.body \ "crn").as[String]
         val ctutr = (request.body \ "ctutr").as[String]
-        registerWithMultipleIdentifiersService.registerRegisteredSociety(crn, ctutr).map {
+        val regime = (request.body \ "regime").as[String]
+        registerWithMultipleIdentifiersService.registerRegisteredSociety(crn, ctutr, regime).map {
           case RegisterWithMultipleIdentifiersSuccess(safeId) =>
             Ok(Json.obj(
               "registration" -> Json.obj(

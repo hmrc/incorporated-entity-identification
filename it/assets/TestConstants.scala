@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ object TestConstants {
   val testCompanyNumber = "12345678"
   val testCompanyName = "Test Company Ltd"
   val testCtutr = "1234567890"
+  val testRegime = "VATC"
   val testInternalId: String = UUID.randomUUID().toString
   val testSafeId: String = UUID.randomUUID().toString
   val testRegisterCompanyJsonBody: JsObject = Json.obj(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,16 +39,15 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
     )
 
 
-  def stubRegisterWithMultipleIdentifiersSuccess(postBody: JsObject)(status: Int, safeId: String): StubMapping =
-
-    when(method = POST, uri = "/cross-regime/register/VATC", postBody)
+  def stubRegisterWithMultipleIdentifiersSuccess(postBody: JsObject, regime: String)(status: Int, safeId: String): StubMapping =
+    when(method = POST, uri = s"/cross-regime/register/GRS\\?grsRegime=$regime", postBody)
       .thenReturn(
         status = status,
         body = registerResponseSuccessBody(safeId)
       )
 
-  def stubRegisterWithMultipleIdentifiersFailure(postBody: JsObject)(status: Int): StubMapping =
-    when(method = POST, uri = "/cross-regime/register/VATC", postBody)
+  def stubRegisterWithMultipleIdentifiersFailure(postBody: JsObject, regime: String)(status: Int): StubMapping =
+    when(method = POST, uri = s"/cross-regime/register/GRS\\?grsRegime=$regime", postBody)
       .thenReturn(
         status = status,
         body = registerResponseFailureBody()
