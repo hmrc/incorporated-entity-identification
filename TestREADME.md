@@ -55,13 +55,18 @@ Example Response body:
 "{CTUTR":"1234567890}"
 ```
 
-### POST /test-only/cross-regime/register/:identifier
+### POST /test-only/cross-regime/register/GRS
 
 ---
 Stub for downstream Register API, must have the corresponding feature switch enabled.
 
 #### Request:
 This endpoint always returns a successful response regardless of the data sent.
+A valid regime must be sent as a query parameter. The accepted values are VATC or PPT. For example:
+
+```
+/test-only/cross-regime/register/GRS?grsRegime=VATC
+```
 
 #### Response:
 Status: **OK(200)**

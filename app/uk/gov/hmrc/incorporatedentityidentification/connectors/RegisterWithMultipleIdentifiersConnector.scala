@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
                                                          appConfig: AppConfig
                                                         )(implicit ec: ExecutionContext) {
 
-  def registerLimitedCompany(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
 
     val jsonBody: JsObject =
       Json.obj(
@@ -47,7 +47,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
 
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
-      url = appConfig.getRegisterWithMultipleIdentifiersUrl,
+      url = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
       body = jsonBody
     )(
@@ -60,7 +60,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
   }
 
 
-  def registerRegisteredSociety(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
     val jsonBody: JsObject =
       Json.obj(
         "registeredSociety" ->
@@ -77,7 +77,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
 
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
-      url = appConfig.getRegisterWithMultipleIdentifiersUrl,
+      url = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
       body = jsonBody
     )(

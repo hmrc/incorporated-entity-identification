@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +35,8 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         s"the $DesStub feature switch is disabled" in {
           disable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody)(OK, testSafeId)
-          val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr)
+          stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody, testRegime)(OK, testSafeId)
+          val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr, testRegime)
           await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
         }
       }
@@ -47,8 +47,8 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         s"the $DesStub feature switch is enabled" in {
           enable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody)(OK, testSafeId)
-          val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr)
+          stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody, testRegime)(OK, testSafeId)
+          val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr, testRegime)
           await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
         }
       }
@@ -61,8 +61,8 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         s"the $DesStub feature switch is disabled" in {
           disable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody)(OK, testSafeId)
-          val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr)
+          stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
+          val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr, testRegime)
           await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
         }
       }
@@ -73,8 +73,8 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         s"the $DesStub feature switch is enabled" in {
           enable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody)(OK, testSafeId)
-          val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr)
+          stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
+          val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr, testRegime)
           await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
         }
       }

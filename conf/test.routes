@@ -1,7 +1,7 @@
-GET        /corporation-tax/identifiers/crn/:companyNumber              uk.gov.hmrc.incorporatedentityidentification.testonly.GetCtReferenceStubController.getCtReference(companyNumber: String)
+GET        /corporation-tax/identifiers/crn/:companyNumber          uk.gov.hmrc.incorporatedentityidentification.testonly.GetCtReferenceStubController.getCtReference(companyNumber: String)
 
-GET        /api/feature-switches                                        uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
+GET        /api/feature-switches                                    uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
 
-POST       /api/feature-switches                                        uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
+POST       /api/feature-switches                                    uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
 
-POST       /cross-regime/register/VATC                                  uk.gov.hmrc.incorporatedentityidentification.testonly.RegisterWithMultipleIdentifiersStubController.registerWithMultipleIdentifiers
+POST       /cross-regime/register/GRS                               uk.gov.hmrc.incorporatedentityidentification.testonly.RegisterWithMultipleIdentifiersStubController.registerWithMultipleIdentifiers(grsRegime:String)
