@@ -90,6 +90,17 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
         Some(Json.obj(authInternalIdKey -> testInternalId, testKey -> testData))
     }
   }
+  "removeJourneyData" should {
+    "successfully remove data associated with journeyId" in {
+      val testKey = "testKey"
+      val testData = "test"
+
+      await(repo.createJourney(testJourneyId, testInternalId))
+      await(repo.updateJourneyData(testJourneyId, testKey, JsString(testData), testInternalId))
+      await(repo.removeJourneyData(testJourneyId, testInternalId))
+      await(repo.getJourneyData(testJourneyId, testInternalId)).map(_.-(creationTimestampKey)) mustBe Some(Json.obj(authInternalIdKey -> testInternalId))
+    }
+  }
 
 }
 
