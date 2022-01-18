@@ -9,6 +9,8 @@ PUT         /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidenti
 
 DELETE      /journey/:journeyId/:dataKey    uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.removeJourneyDataField(journeyId, dataKey)
 
+DELETE      /journey/:journeyId             uk.gov.hmrc.incorporatedentityidentification.controllers.JourneyDataController.removeJourneyData(journeyId)
+
 POST        /validate-details               uk.gov.hmrc.incorporatedentityidentification.controllers.ValidateIncorporatedEntityDetailsController.validateDetails()
 
 POST        /register-limited-company       uk.gov.hmrc.incorporatedentityidentification.controllers.RegisterBusinessEntityController.registerLimitedCompany()

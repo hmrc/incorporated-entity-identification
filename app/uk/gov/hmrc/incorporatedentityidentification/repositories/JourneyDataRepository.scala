@@ -88,6 +88,20 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       multi = false
     ).filter(_.n == 1)
 
+  def removeJourneyData(journeyId: String, authInternalId: String): Future[UpdateWriteResult] =
+    collection.update(true).one(
+      Json.obj(
+        journeyIdKey -> journeyId,
+        authInternalIdKey -> authInternalId
+      ),
+      Json.obj(
+        journeyIdKey -> journeyId,
+        authInternalIdKey -> authInternalId
+      ),
+      upsert = false,
+      multi = false
+    ).filter(_.n == 1)
+
   private lazy val ttlIndex = Index(
     Seq(("creationTimestamp", IndexType.Ascending)),
     name = Some("IncorporatedEntityInformationExpires"),
