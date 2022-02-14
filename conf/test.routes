@@ -4,4 +4,4 @@ GET        /api/feature-switches                                    uk.gov.hmrc.
 
 POST       /api/feature-switches                                    uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
 
-POST       /cross-regime/register/GRS                               uk.gov.hmrc.incorporatedentityidentification.testonly.RegisterWithMultipleIdentifiersStubController.registerWithMultipleIdentifiers(grsRegime:String)
+POST       /cross-regime/register/GRS                               uk.gov.hmrc.incorporatedentityidentification.testonly.RegisterWithMultipleIdentifiersStubController.registerWithMultipleIdentifiers()

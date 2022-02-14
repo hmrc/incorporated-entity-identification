@@ -17,25 +17,32 @@
 package uk.gov.hmrc.incorporatedentityidentification.testonly
 
 
-import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future
 
 @Singleton
 class RegisterWithMultipleIdentifiersStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
-  def registerWithMultipleIdentifiers(regime: String): Action[AnyContent] = Action {
-    val stubbedSafeId = "X00000123456789"
+  def registerWithMultipleIdentifiers(): Action[JsValue] = Action.async(parse.json) {
+    implicit request =>
+      val ctutr: String = (request.body \\ "ctutr").map(_.as[String]).head
 
-    Ok(Json.obj(
-      "identification" -> Json.arr(
-        Json.obj(
-          "idType" -> "SAFEID",
-          "idValue" -> stubbedSafeId
-        )
-      )
-    ))
+      val stubbedSafeId = ctutr match {
+        case "2111234408" => "XW0000100382303" // PPT Testing
+        case "9111234409" => "XA0000100382304" // PPT Testing
+        case _ => "X00000123456789"
+      }
+
+      Future.successful(Ok(Json.obj(
+        "identification" -> Json.arr(
+          Json.obj(
+            "idType" -> "SAFEID",
+            "idValue" -> stubbedSafeId
+          )
+        ))))
   }
 }
