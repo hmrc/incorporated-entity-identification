@@ -24,6 +24,11 @@ import utils.ComponentSpecHelper
 
 class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelper with GetCtReferenceStub with AuthStub {
 
+  private val expectedNoFoundResponseJson = Json.obj(
+    "code" -> "NOT_FOUND",
+    "reason" -> "The back end has indicated that CT UTR cannot be returned"
+  )
+
   "validateDetails" should {
     "return details match" when {
       "supplied details match those in database" in {
@@ -60,13 +65,10 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
     }
 
     "return details not found" when {
+
       "supplied details are not found in database" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubGetCtReference("000000000")(status = NOT_FOUND)
-        val testJson = Json.obj(
-          "code" -> "NOT_FOUND",
-          "reason" -> "The back end has indicated that CT UTR cannot be returned"
-        )
 
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",
@@ -76,13 +78,24 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         val result = post("/validate-details")(suppliedJson)
 
         result.status mustBe BAD_REQUEST
-        result.json mustBe testJson
+        result.json mustBe expectedNoFoundResponseJson
+      }
+
+      "the user asserts that the unincorporated association does not have a Ct Utr, but one is found" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
+
+        val suppliedJson = Json.obj("companyNumber" -> testCompanyNumber)
+
+        val result = post(uri = "/validate-details")(suppliedJson)
+
+        result.status mustBe BAD_REQUEST
+        result.json mustBe expectedNoFoundResponseJson
       }
     }
     "return Unauthorised" when {
       "there is an auth failure" in {
         stubAuthFailure()
-        stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
 
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,

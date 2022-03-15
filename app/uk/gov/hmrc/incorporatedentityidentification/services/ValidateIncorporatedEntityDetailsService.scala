@@ -26,14 +26,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ValidateIncorporatedEntityDetailsService @Inject()(getCtReferenceConnector: GetCtReferenceConnector)(implicit ec: ExecutionContext) {
 
-  def validateDetails(companyNumber: String, ctutr: String)(implicit hc: HeaderCarrier): Future[IncorporatedEntityDetailsValidationResult] = {
+  def validateDetails(companyNumber: String, optCtUtr: Option[String])(implicit hc: HeaderCarrier): Future[IncorporatedEntityDetailsValidationResult] = {
     getCtReferenceConnector.getCtReference(companyNumber).map {
-      case Some(retrievedCtutr) if retrievedCtutr == ctutr =>
-        DetailsMatched
-      case Some(_) =>
-        DetailsMismatched
-      case None =>
-        DetailsNotFound
+      case Some(retrievedCtUtr) => optCtUtr match {
+        case Some(`retrievedCtUtr`) => DetailsMatched
+        case Some(_) => DetailsMismatched
+        case None => DetailsNotFound
+      }
+      case None => DetailsNotFound
     }
   }
 

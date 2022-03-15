@@ -42,25 +42,34 @@ class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matc
   "validateDetails" should {
     s"return $DetailsMatched" when {
       "the supplied CT Reference matches the stored CT Reference" in {
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber))(eqTo(hc)) returns Future.successful(Some(testCtReference))
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Some(testCtReference))
 
-        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, testCtReference)) mustBe DetailsMatched
+        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsMatched
       }
     }
     s"return $DetailsMismatched" when {
       "the supplied CT Reference does not match the stored CT Reference" in {
         val mismatchedTestCtReference = "mismatchedTestCtReference"
 
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber))(eqTo(hc)) returns Future.successful(Some(testCtReference))
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Some(testCtReference))
 
-        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, mismatchedTestCtReference)) mustBe DetailsMismatched
+        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(mismatchedTestCtReference))) mustBe DetailsMismatched
       }
     }
     s"return $DetailsNotFound" when {
       "there is no stored CT Reference for the provided Company Number" in {
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber))(eqTo(hc)) returns Future.successful(None)
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(None)
 
-        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, testCtReference)) mustBe DetailsNotFound
+        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsNotFound
+      }
+    }
+
+    s"return $DetailsNotFound" when {
+      "the user asserts the unincorporated association does not have a Ct Utr, but one is found" in {
+
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Some(testCtReference))
+
+        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, None)) mustBe DetailsNotFound
       }
     }
 
