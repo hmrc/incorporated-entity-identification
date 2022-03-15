@@ -18,7 +18,7 @@ package uk.gov.hmrc.incorporatedentityidentification.models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class IncorporatedEntityDetailsModel(companyNumber: String, ctutr: String)
+case class IncorporatedEntityDetailsModel(companyNumber: String, ctutr: Option[String])
 
 object IncorporatedEntityDetailsModel {
   implicit val format: OFormat[IncorporatedEntityDetailsModel] = Json.format[IncorporatedEntityDetailsModel]
