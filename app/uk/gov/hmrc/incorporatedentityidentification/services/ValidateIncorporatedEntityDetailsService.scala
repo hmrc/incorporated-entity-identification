@@ -30,8 +30,7 @@ class ValidateIncorporatedEntityDetailsService @Inject()(getCtReferenceConnector
     getCtReferenceConnector.getCtReference(companyNumber).map {
       case Some(retrievedCtUtr) => optCtUtr match {
         case Some(`retrievedCtUtr`) => DetailsMatched
-        case Some(_) => DetailsMismatched
-        case None => DetailsNotFound
+        case Some(_) | None => DetailsMismatched
       }
       case None => DetailsNotFound
     }
