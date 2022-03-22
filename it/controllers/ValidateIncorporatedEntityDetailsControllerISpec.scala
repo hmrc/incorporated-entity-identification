@@ -24,17 +24,14 @@ import utils.ComponentSpecHelper
 
 class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelper with GetCtReferenceStub with AuthStub {
 
-  private val expectedNoFoundResponseJson = Json.obj(
-    "code" -> "NOT_FOUND",
-    "reason" -> "The back end has indicated that CT UTR cannot be returned"
-  )
+  private val expectedDetailsMismatchedJson = Json.obj("matched" -> false)
 
   "validateDetails" should {
     "return details match" when {
       "supplied details match those in database" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
-        val testJson = Json.obj("matched" -> true)
+        val expectedJson = Json.obj("matched" -> true)
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
           "ctutr" -> testCtutr
@@ -43,7 +40,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         val result = post("/validate-details")(suppliedJson)
 
         result.status mustBe OK
-        result.json mustBe testJson
+        result.json mustBe expectedJson
       }
     }
 
@@ -51,7 +48,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
       "supplied details do not match those in database" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubGetCtReference(testCompanyNumber)(status = OK, body = Json.obj("CTUTR" -> testCtutr))
-        val testJson = Json.obj("matched" -> false)
+
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
           "ctutr" -> "mismatch"
@@ -60,25 +57,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         val result = post("/validate-details")(suppliedJson)
 
         result.status mustBe OK
-        result.json mustBe testJson
-      }
-    }
-
-    "return details not found" when {
-
-      "supplied details are not found in database" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubGetCtReference("000000000")(status = NOT_FOUND)
-
-        val suppliedJson = Json.obj(
-          "companyNumber" -> "000000000",
-          "ctutr" -> testCtutr
-        )
-
-        val result = post("/validate-details")(suppliedJson)
-
-        result.status mustBe BAD_REQUEST
-        result.json mustBe expectedNoFoundResponseJson
+        result.json mustBe expectedDetailsMismatchedJson
       }
 
       "the user asserts that the unincorporated association does not have a Ct Utr, but one is found" in {
@@ -89,9 +68,33 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val result = post(uri = "/validate-details")(suppliedJson)
 
-        result.status mustBe BAD_REQUEST
-        result.json mustBe expectedNoFoundResponseJson
+        result.status mustBe OK
+        result.json mustBe expectedDetailsMismatchedJson
       }
+    }
+
+    "return details not found" when {
+
+      "supplied details are not found in database" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubGetCtReference("000000000")(status = NOT_FOUND)
+
+        val expectedJson = Json.obj(
+          "code" -> "NOT_FOUND",
+          "reason" -> "The back end has indicated that CT UTR cannot be returned"
+        )
+
+        val suppliedJson = Json.obj(
+          "companyNumber" -> "000000000",
+          "ctutr" -> testCtutr
+        )
+
+        val result = post("/validate-details")(suppliedJson)
+
+        result.status mustBe BAD_REQUEST
+        result.json mustBe expectedJson
+      }
+
     }
     "return Unauthorised" when {
       "there is an auth failure" in {
