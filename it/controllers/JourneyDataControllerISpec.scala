@@ -306,6 +306,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         val testDataKey = "testDataKey"
         val testDataValue = "testDataValue"
+        val creationTimestampKey: String = "creationTimestamp"
 
         insertById(testJourneyId, testInternalId, Json.obj(testDataKey -> testDataValue))
 
@@ -313,12 +314,15 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe NO_CONTENT
 
-        findById(testJourneyId) mustBe Some(
+        findById(testJourneyId).map(_.-(creationTimestampKey)) mustBe Some(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId
           )
         )
+
+        findById(testJourneyId).map(_.keys.contains(creationTimestampKey)) mustBe Some(true)
+
       }
     }
     "there is no journey for the provided journey ID" should {
