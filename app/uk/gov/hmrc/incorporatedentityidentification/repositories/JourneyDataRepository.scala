@@ -47,7 +47,7 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       Json.obj(
         journeyIdKey -> journeyId,
         authInternalIdKey -> authInternalId,
-        "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
       )
     ).map(_ => journeyId)
 
@@ -96,7 +96,8 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       ),
       Json.obj(
         journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId
+        authInternalIdKey -> authInternalId,
+        CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
       ),
       upsert = false,
       multi = false
@@ -126,4 +127,5 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
 object JourneyDataRepository {
   val journeyIdKey: String = "_id"
   val authInternalIdKey: String = "authInternalId"
+  val CreationTimestampKey: String = "creationTimestamp"
 }
