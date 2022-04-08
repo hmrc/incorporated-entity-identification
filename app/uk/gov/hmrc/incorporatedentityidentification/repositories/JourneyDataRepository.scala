@@ -18,7 +18,7 @@ package uk.gov.hmrc.incorporatedentityidentification.repositories
 
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.UpdateWriteResult
+import reactivemongo.api.commands.{MultiBulkWriteResult, UpdateWriteResult}
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.JsObjectDocumentWriter
@@ -104,7 +104,7 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     ).filter(_.n == 1)
 
   private lazy val ttlIndex = Index(
-    Seq(("creationTimestamp", IndexType.Ascending)),
+    key = Seq((CreationTimestampKey, IndexType.Ascending)),
     name = Some("IncorporatedEntityInformationExpires"),
     options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
   )
@@ -115,15 +115,13 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     }
   }
 
-  setIndex()
-
   override def drop(implicit ec: ExecutionContext): Future[Boolean] =
     collection.drop(failIfNotFound = false).map { r =>
       setIndex()
       r
     }
 
-  def runOnce = {
+  def countNumberOfEntriesWithoutCreationTimestamp = {
     collection.count(
       Some(Json.obj(CreationTimestampKey -> Json.obj("$exists" -> false))),
       0,
@@ -132,7 +130,33 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
     )
   }
 
-  runOnce.map(count => logger.warn("Number of documents that have no creation timestamp: " + count))
+  def addCreationTimestampFieldIfMissing(): Future[MultiBulkWriteResult] = {
+    import reactivemongo.play.json.ImplicitBSONHandlers._
+
+    val updateBuilder = collection.update(ordered = true)
+
+    val theUpdatedToBeExecuted: Future[collection.UpdateCommand.UpdateElement] = updateBuilder.element(
+      q = BSONDocument(CreationTimestampKey -> BSONDocument("$exists" -> false)),
+      u = BSONDocument(
+        "$set" -> BSONDocument(CreationTimestampKey -> BSONDocument("$date" -> Instant.now.toEpochMilli))
+      ),
+      multi = true
+    )
+
+    theUpdatedToBeExecuted.flatMap(theUpdatedToBeExecuted => updateBuilder.many(Iterable(theUpdatedToBeExecuted)))
+  }
+
+  setIndex()
+
+  for {
+    count <- countNumberOfEntriesWithoutCreationTimestamp
+    _ <- Future.successful(logger.warn("[IncorporatedEntityMongoQuery] - Number of documents that have no creation timestamp: " + count))
+    result <- addCreationTimestampFieldIfMissing()
+    _ <- Future.successful(logger.warn(s"[IncorporatedEntityMongoQuery] - AddCreationTimestampFieldIfMissing result is $result"))
+    newCount <- countNumberOfEntriesWithoutCreationTimestamp
+    _ <- Future.successful(logger.warn("[IncorporatedEntityMongoQuery] - Number of documents that have no creation timestamp: " + newCount))
+  }yield
+    ()
 }
 
 object JourneyDataRepository {
