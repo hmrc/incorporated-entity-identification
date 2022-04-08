@@ -24,7 +24,7 @@ import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.JsObjectDocumentWriter
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.{authInternalIdKey, _}
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import java.time.Instant
@@ -122,6 +122,17 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       setIndex()
       r
     }
+
+  def runOnce = {
+    collection.count(
+      Some(Json.obj(CreationTimestampKey -> Json.obj("$exists" -> false))),
+      0,
+      0,
+      None
+    )
+  }
+
+  runOnce.map(count => logger.warn("Number of documents that have no creation timestamp: " + count))
 }
 
 object JourneyDataRepository {
