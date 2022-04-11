@@ -17,12 +17,10 @@
 package repositories
 
 import assets.TestConstants.{testInternalId, testJourneyId}
-import play.api.libs.json.{JsObject, JsString, Json}
+import play.api.libs.json.{JsString, Json}
 import play.api.test.Helpers._
-import reactivemongo.play.json.collection.Helpers.idWrites
 import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 import utils.ComponentSpecHelper
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,62 +36,6 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 
   val authInternalIdKey: String = "authInternalId"
   val creationTimestampKey: String = "creationTimestamp"
-
-  "addedCreationTimestampIfMissing" should {
-    def removeCreationTimestamp(): JsObject = Json.obj("$unset" -> Json.obj("creationTimestamp" -> ""))
-
-    def setANewField(fieldName: String): JsObject = Json.obj("$set" -> Json.obj(fieldName -> "25"))
-
-    def entryWithJourneyId(journeyId: Int): JsObject = Json.obj(
-      journeyIdKey -> journeyId.toString,
-      authInternalIdKey -> (journeyId * 10).toString
-    )
-
-    "do its job of adding creationTimestamp if missing" in {
-      val actualDocumentsWithoutCreationTimestamp = for {
-        _ <- repo.createJourney(journeyId = "1", authInternalId = "10")
-        _ <- repo.createJourney(journeyId = "2", authInternalId = "20")
-        _ <- repo.createJourney(journeyId = "3", authInternalId = "30")
-        _ <- repo.createJourney(journeyId = "4", authInternalId = "40")
-
-        _ <- repo.collection.update(true).one(entryWithJourneyId(journeyId = 1), removeCreationTimestamp())
-        _ <- repo.collection.update(true).one(entryWithJourneyId(journeyId = 1), setANewField(fieldName = "name1"))
-
-        _ <- repo.collection.update(true).one(entryWithJourneyId(journeyId = 3), removeCreationTimestamp())
-        _ <- repo.collection.update(true).one(entryWithJourneyId(journeyId = 3), setANewField(fieldName = "name3"))
-
-        _ <- repo.collection.update(true).one(entryWithJourneyId(journeyId = 4), removeCreationTimestamp())
-        _ <- repo.collection.update(true).one(entryWithJourneyId(journeyId = 4), setANewField(fieldName = "name4"))
-
-        documentsWithoutCreationTimestamp <- repo.count(Json.obj("creationTimestamp" -> Json.obj("$exists" -> false)))
-      } yield
-        documentsWithoutCreationTimestamp
-
-      await(actualDocumentsWithoutCreationTimestamp) must be(3)
-
-      await(repo.addCreationTimestampFieldIfMissing()).toString must be("MultiBulkWriteResult(true,3,3,List(),List(),None,None,None,3)")
-
-      val journey1 = await(repo.getJourneyData("1", "10")).get
-      journey1.keys must contain("creationTimestamp")
-      journey1.keys must contain("name1")
-
-      val journey2 = await(repo.getJourneyData("2", "20")).get
-      journey2.keys must contain("creationTimestamp")
-
-      val journey3 = await(repo.getJourneyData("3", "30")).get
-      journey3.keys must contain("creationTimestamp")
-      journey3.keys must contain("name3")
-
-      val journey4 = await(repo.getJourneyData("4", "40")).get
-      journey4.keys must contain("creationTimestamp")
-      journey4.keys must contain("name4")
-
-      await(repo.count(Json.obj("creationTimestamp" -> Json.obj("$exists" -> false)))) must be(0)
-
-      await(repo.addCreationTimestampFieldIfMissing()).toString must be("MultiBulkWriteResult(true,0,0,List(),List(),None,None,None,0)")
-
-    }
-  }
 
   "createJourney" should {
     "successfully insert the journeyId" in {
