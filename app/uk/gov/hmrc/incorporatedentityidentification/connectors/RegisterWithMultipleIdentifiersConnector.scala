@@ -111,16 +111,25 @@ object RegisterWithMultipleIdentifiersHttpParser {
             case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
             case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
           }
-        case _ => RegisterWithMultipleIdentifiersFailure(response.status, response.body)
+        case _ => if (response.json.as[JsObject].keys.contains("failures")) {
+          (response.json \ "failures").validate[Array[Failures]] match {
+            case JsSuccess(failures, _) => RegisterWithMultipleIdentifiersFailure(response.status, failures)
+            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}") }
+        } else {
+          response.json.validate[Failures] match {
+          case JsSuccess(failure, _) => RegisterWithMultipleIdentifiersFailure(response.status, Array(failure))
+          case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}") } }
+          }
+        }
       }
-    }
-  }
-
 
   sealed trait RegisterWithMultipleIdentifiersResult
 
   case class RegisterWithMultipleIdentifiersSuccess(safeId: String) extends RegisterWithMultipleIdentifiersResult
 
-  case class RegisterWithMultipleIdentifiersFailure(status: Int, body: String) extends RegisterWithMultipleIdentifiersResult
+  case class RegisterWithMultipleIdentifiersFailure(status: Int, body: Array[Failures]) extends RegisterWithMultipleIdentifiersResult
 
+  case class Failures(code: String, reason: String)
+
+  implicit val format: OFormat[Failures] = Json.format[Failures]
 }
