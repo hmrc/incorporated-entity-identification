@@ -55,7 +55,9 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         )
         val resultJson = Json.obj(
           "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTRATION_FAILED"))
+            "registrationStatus" -> "REGISTRATION_FAILED",
+          "failures" -> Json.arr(testRegisterResponseFailureBody))
+          )
         val result = post("/register-limited-company")(jsonBody)
         result.status mustBe OK
         result.json mustBe resultJson
@@ -98,7 +100,9 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         val resultJson = Json.obj(
           "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTRATION_FAILED"))
+            "registrationStatus" -> "REGISTRATION_FAILED",
+            "failures" -> Json.arr(testRegisterResponseFailureBody))
+        )
 
         val result = post("/register-registered-society")(jsonBody)
         result.status mustBe OK

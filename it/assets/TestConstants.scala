@@ -30,17 +30,27 @@ object TestConstants {
   val testInternalId: String = UUID.randomUUID().toString
   val testSafeId: String = UUID.randomUUID().toString
   val testRegisterCompanyJsonBody: JsObject = Json.obj(
-      "company" ->
-        Json.obj(
-          "crn" -> testCompanyNumber,
-          "ctutr" -> testCtutr
-        )
-    )
+    "company" ->
+      Json.obj(
+        "crn" -> testCompanyNumber,
+        "ctutr" -> testCtutr
+      )
+  )
   val testRegisterRegisteredSocietyJsonBody: JsObject = Json.obj(
-      "registeredSociety" ->
-        Json.obj(
-          "crn" -> testCompanyNumber,
-          "ctutr" -> testCtutr
-        )
+    "registeredSociety" ->
+      Json.obj(
+        "crn" -> testCompanyNumber,
+        "ctutr" -> testCtutr
+      )
+  )
+
+  val testCode: String = "INVALID_PAYLOAD"
+  val testReason: String = "Request has not passed validation. Invalid Payload."
+
+  val testRegisterResponseFailureBody: JsObject =
+    Json.obj(
+      "code" -> "INVALID_PAYLOAD",
+      "reason" -> "Request has not passed validation. Invalid Payload."
     )
+
 }

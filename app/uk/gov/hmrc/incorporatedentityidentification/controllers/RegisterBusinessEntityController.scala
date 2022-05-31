@@ -45,9 +45,9 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
                 "registrationStatus" -> "REGISTERED",
                 "registeredBusinessPartnerId" -> safeId)))
           case RegisterWithMultipleIdentifiersFailure(status, body) =>
-            Ok(Json.obj(
-              "registration" -> Json.obj(
-                "registrationStatus" -> "REGISTRATION_FAILED")))
+            Ok(Json.obj( "registration" -> Json.obj(
+              "registrationStatus" -> "REGISTRATION_FAILED",
+              "failures" -> body)))
         }
       }
   }
@@ -65,9 +65,9 @@ class RegisterBusinessEntityController @Inject()(cc: ControllerComponents,
                 "registrationStatus" -> "REGISTERED",
                 "registeredBusinessPartnerId" -> safeId)))
           case RegisterWithMultipleIdentifiersFailure(status, body) =>
-            Ok(Json.obj(
-              "registration" -> Json.obj(
-                "registrationStatus" -> "REGISTRATION_FAILED")))
+            Ok(Json.obj( "registration" -> Json.obj(
+              "registrationStatus" -> "REGISTRATION_FAILED",
+              "failures" -> body)))
         }
       }
   }
