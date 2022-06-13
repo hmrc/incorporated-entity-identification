@@ -40,6 +40,10 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
         Ok(Json.obj("CTUTR" -> "0987654321"))
       case "21436587" => // VRS Partnerships E2E testing
         Ok(Json.obj("CTUTR" -> "5432167812"))
+      case "11111111" =>
+        Ok(Json.obj("CTUTR" -> "1111111111"))
+      case "22222222" =>
+        Ok(Json.obj("CTUTR" -> "2222222222"))
       case _ =>
         Ok(Json.obj("CTUTR" -> "1234567890"))
     }

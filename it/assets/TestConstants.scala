@@ -45,12 +45,26 @@ object TestConstants {
   )
 
   val testCode: String = "INVALID_PAYLOAD"
-  val testReason: String = "Request has not passed validation. Invalid Payload."
+  val testReason: String = "Request has not passed validation. Invalid payload."
 
   val testRegisterResponseFailureBody: JsObject =
     Json.obj(
-      "code" -> "INVALID_PAYLOAD",
-      "reason" -> "Request has not passed validation. Invalid Payload."
+      "code" -> testCode,
+      "reason" -> testReason
+    )
+
+  val registerResponseMultipleFailureBody: JsObject =
+    Json.obj(
+      "failures" -> Json.arr(
+        Json.obj(
+          "code" -> "INVALID_PAYLOAD",
+          "reason" -> "Request has not passed validation. Invalid payload."
+        ),
+        Json.obj(
+          "code" -> "INVALID_REGIME",
+          "reason" -> "Request has not passed validation.  Invalid regime."
+        )
+      )
     )
 
 }

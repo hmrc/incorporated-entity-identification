@@ -32,13 +32,6 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
       )
     )
 
-  private def registerResponseFailureBody(): JsObject =
-    Json.obj(
-      "code" -> "INVALID_PAYLOAD",
-      "reason" -> "Request has not passed validation. Invalid Payload."
-    )
-
-
   def stubRegisterWithMultipleIdentifiersSuccess(postBody: JsObject, regime: String)(status: Int, safeId: String): StubMapping =
     when(method = POST, uri = s"/cross-regime/register/GRS\\?grsRegime=$regime", postBody)
       .thenReturn(
@@ -46,11 +39,11 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
         body = registerResponseSuccessBody(safeId)
       )
 
-  def stubRegisterWithMultipleIdentifiersFailure(postBody: JsObject, regime: String)(status: Int): StubMapping =
+  def stubRegisterWithMultipleIdentifiersFailure(postBody: JsObject, regime: String)(status: Int, body: JsObject): StubMapping =
     when(method = POST, uri = s"/cross-regime/register/GRS\\?grsRegime=$regime", postBody)
       .thenReturn(
         status = status,
-        body = registerResponseFailureBody()
+        body = body
       )
 
 }

@@ -38,7 +38,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
 
           stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody, testRegime)(OK, testSafeId)
           val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr, testRegime)
-          await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+          await(result) mustBe RegisterWithMultipleIdentifiersSuccess(testSafeId)
         }
       }
     }
@@ -50,22 +50,38 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
 
           stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody, testRegime)(OK, testSafeId)
           val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr, testRegime)
-          await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+          await(result) mustBe RegisterWithMultipleIdentifiersSuccess(testSafeId)
         }
       }
     }
+
     "return a failure with the response failure body" when {
       "the Registration was a failure on the Register API stub" when {
         s"the $DesStub feature switch is enabled" in {
           enable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody, testRegime)(BAD_REQUEST)
+          stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody, testRegime)(BAD_REQUEST, testRegisterResponseFailureBody)
           val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr, testRegime)
 
           await(result) match {
             case RegisterWithMultipleIdentifiersFailure(status, failures) =>
               status mustBe BAD_REQUEST
               failures.head mustBe Failures(testCode, testReason)
+            case _ => fail("test returned an invalid registration result")
+          }
+        }
+
+        "multiple failures have been returned" in {
+          enable(DesStub)
+
+          stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody, testRegime)(BAD_REQUEST, registerResponseMultipleFailureBody)
+
+          val result = connector.registerLimitedCompany(testCompanyNumber, testCtutr, testRegime)
+
+          await(result) match {
+            case RegisterWithMultipleIdentifiersFailure(status, failures) =>
+              status mustBe BAD_REQUEST
+              failures mustBe Array(Failures(testCode, testReason), Failures("INVALID_REGIME", "Request has not passed validation.  Invalid regime."))
             case _ => fail("test returned an invalid registration result")
           }
         }
@@ -81,7 +97,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
 
           stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
           val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr, testRegime)
-          await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+          await(result) mustBe RegisterWithMultipleIdentifiersSuccess(testSafeId)
         }
       }
     }
@@ -93,7 +109,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
 
           stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
           val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr, testRegime)
-          await(result) mustBe (RegisterWithMultipleIdentifiersSuccess(testSafeId))
+          await(result) mustBe RegisterWithMultipleIdentifiersSuccess(testSafeId)
         }
       }
     }
@@ -103,13 +119,28 @@ class RegisterWithMultipleIdentifiersConnectorISpec extends ComponentSpecHelper 
         s"the $DesStub feature switch is enabled" in {
           enable(DesStub)
 
-          stubRegisterWithMultipleIdentifiersFailure(testRegisterRegisteredSocietyJsonBody, testRegime)(BAD_REQUEST)
+          stubRegisterWithMultipleIdentifiersFailure(testRegisterRegisteredSocietyJsonBody, testRegime)(BAD_REQUEST, testRegisterResponseFailureBody)
           val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr, testRegime)
 
           await(result) match {
             case RegisterWithMultipleIdentifiersFailure(status, failures) =>
               status mustBe BAD_REQUEST
               failures.head mustBe Failures(testCode, testReason)
+            case _ => fail("test returned an invalid registration result")
+          }
+        }
+
+        "multiple failures have been returned" in {
+          enable(DesStub)
+
+          stubRegisterWithMultipleIdentifiersFailure(testRegisterRegisteredSocietyJsonBody, testRegime)(BAD_REQUEST, registerResponseMultipleFailureBody)
+
+          val result = connector.registerRegisteredSociety(testCompanyNumber, testCtutr, testRegime)
+
+          await(result) match {
+            case RegisterWithMultipleIdentifiersFailure(status, failures) =>
+              status mustBe BAD_REQUEST
+              failures mustBe Array(Failures(testCode, testReason), Failures("INVALID_REGIME", "Request has not passed validation.  Invalid regime."))
             case _ => fail("test returned an invalid registration result")
           }
         }
