@@ -248,16 +248,23 @@ Example response bodies:
 }
 ```
 
-or
+When the registration is failed:
 
 ```
 {
     "registration":{
-                    "registrationStatus":"REGISTRATION_FAILED",
+                   "registrationStatus":"REGISTRATION_FAILED",
+       "failures": [
+            {
+               "code": "INVALID_REGIME",
+               "reason": "Request has not passed validation.  Invalid regime."
+            }
+       ]
     }
 }
 ```
-
+To mimic a failure response on the Register API call, `11111111` and `1111111111` must be used as crn and ctutr respectively for 
+single failure result and `22222222` and `2222222222` must be used as crn and ctutr respectively for multiple failure result.
 ### License
 
 This code is open source software licensed under
