@@ -20,6 +20,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyDataService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -82,7 +83,11 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
       authorised().retrieve(internalId) {
         case Some(internalId) =>
           journeyDataService.updateJourneyData(journeyId, dataKey, req.body, internalId).map {
-            _ => Ok
+                hasUpdated =>
+            if(hasUpdated)
+              Ok
+            else
+              throw new InternalServerException(s"The field $dataKey could not be updated for journey $journeyId")
           }
         case None =>
           Future.successful(Unauthorized)
@@ -94,7 +99,11 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
       authorised().retrieve(internalId) {
         case Some(internalId) =>
           journeyDataService.removeJourneyDataField(journeyId, internalId, dataKey).map {
-            _ => NoContent
+                journeyMatched =>
+            if(journeyMatched)
+              NoContent
+            else
+              throw new InternalServerException(s"The journey data for $journeyId could not be found")
           }
         case None =>
           Future.successful(Unauthorized)
@@ -106,7 +115,11 @@ class JourneyDataController @Inject()(cc: ControllerComponents,
       authorised().retrieve(internalId) {
         case Some(internalId) =>
           journeyDataService.removeJourneyData(journeyId, internalId).map {
-            _ => NoContent
+                journeyMatched =>
+            if(journeyMatched)
+              NoContent
+            else
+              throw new InternalServerException(s"The journey data for $journeyId could not be found")
           }
         case None =>
           Future.successful(Unauthorized)

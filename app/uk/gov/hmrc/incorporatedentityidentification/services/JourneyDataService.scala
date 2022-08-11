@@ -17,7 +17,6 @@
 package uk.gov.hmrc.incorporatedentityidentification.services
 
 import play.api.libs.json.{JsObject, JsValue}
-import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 
 import javax.inject.{Inject, Singleton}
@@ -44,15 +43,15 @@ class JourneyDataService @Inject()(incorporatedEntityIdentificationRepository: J
     }
   }
 
-  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Any] = {
+  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Boolean] = {
     incorporatedEntityIdentificationRepository.updateJourneyData(journeyId, dataKey, data, authInternalId)
   }
 
-  def removeJourneyDataField(journeyId: String, authInternalId: String, dataKey: String): Future[UpdateWriteResult] = {
+  def removeJourneyDataField(journeyId: String, authInternalId: String, dataKey: String): Future[Boolean] = {
     incorporatedEntityIdentificationRepository.removeJourneyDataField(journeyId, authInternalId, dataKey)
   }
 
-  def removeJourneyData(journeyId: String, authInternalId: String): Future[WriteResult] = {
+  def removeJourneyData(journeyId: String, authInternalId: String): Future[Boolean] = {
     incorporatedEntityIdentificationRepository.removeJourneyData(journeyId, authInternalId)
   }
 
