@@ -20,8 +20,8 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, _}
-import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -30,14 +30,17 @@ trait JourneyDataMongoHelper extends BeforeAndAfterEach {
 
   lazy val repo: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
-  def findById(journeyId: String): Option[JsObject] =
-    await(repo.collection.find(
-      Json.obj("_id" -> journeyId),
-      None
-    ).one[JsObject])
+  def findById(journeyId: String, authInternalId: String): Option[JsObject] =
+  await(repo.getJourneyData(journeyId, authInternalId))
 
-  def insertById(journeyId: String, internalId: String, jsonData: JsObject = Json.obj()): Unit =
-    await(repo.collection.insert(true).one(Json.obj("_id" -> journeyId, "authInternalId" -> internalId) ++ jsonData))
+  def insertById(journeyId: String, authInternalId: String, data: JsObject = Json.obj()): Unit =
+    await(
+      repo.collection.insertOne(
+        Json.obj(
+          JourneyIdKey -> journeyId,
+          AuthInternalIdKey -> authInternalId) ++ data
+      ).toFuture().map(_ => Unit)
+    )
 
   override def beforeEach(): Unit = {
     await(repo.drop)

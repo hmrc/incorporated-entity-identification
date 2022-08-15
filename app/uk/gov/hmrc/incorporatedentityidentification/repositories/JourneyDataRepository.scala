@@ -16,117 +16,93 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.repositories
 
-import play.api.libs.json.{Format, JsObject, JsValue, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.UpdateWriteResult
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json.JsObjectDocumentWriter
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model._
+
+import play.api.libs.json._
+
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import uk.gov.hmrc.incorporatedentityidentification.models.IncorporatedEntityIdentificationModel
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
-import uk.gov.hmrc.mongo.ReactiveRepository
+
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent,
-                                      appConfig: AppConfig)
-                                     (implicit ec: ExecutionContext)
-  extends ReactiveRepository(
-    collectionName = "incorporated-entity-identification",
-    mongo = reactiveMongoComponent.mongoConnector.db,
-    domainFormat = IncorporatedEntityIdentificationModel.MongoFormat,
-    idFormat = implicitly[Format[String]]
-  ) {
+class JourneyDataRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
+                                     (implicit ec: ExecutionContext) extends PlayMongoRepository[JsObject](
+  collectionName = "incorporated-entity-identification",
+  mongoComponent = mongoComponent,
+  domainFormat = implicitly[Format[JsObject]],
+  indexes = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds))
+){
 
   def createJourney(journeyId: String, authInternalId: String): Future[String] =
-    collection.insert(true).one(
+    collection.insertOne(
       Json.obj(
-        journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId,
+        JourneyIdKey -> journeyId,
+        AuthInternalIdKey -> authInternalId,
         CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
       )
-    ).map(_ => journeyId)
+    ).toFuture().map(_ => journeyId)
 
   def getJourneyData(journeyId: String, authInternalId: String): Future[Option[JsObject]] =
     collection.find(
-      Json.obj(
-        journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId
-      ),
-      Some(Json.obj(
-        journeyIdKey -> 0
-      ))
-    ).one[JsObject]
+      filterJourneyConfig(journeyId, authInternalId)
+    ).headOption()
 
-  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[UpdateWriteResult] =
-    collection.update(true).one(
-      Json.obj(
-        journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId
-      ),
-      Json.obj(
-        "$set" -> Json.obj(dataKey -> data)
-      ),
-      upsert = false,
-      multi = false
-    ).filter(_.n == 1)
+  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Boolean] =
+    collection.updateOne(
+      filterJourneyConfig(journeyId, authInternalId),
+      Updates.set(dataKey, Codecs.toBson(data)),
+      UpdateOptions().upsert(false)
+    ).toFuture.map {
+      _.getMatchedCount == 1
+    }
 
-  def removeJourneyDataField(journeyId: String, authInternalId: String, dataKey: String): Future[UpdateWriteResult] =
-    collection.update(true).one(
-      Json.obj(
-        journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId
-      ),
-      Json.obj(
-        "$unset" -> Json.obj(dataKey -> 1)
-      ),
-      upsert = false,
-      multi = false
-    ).filter(_.n == 1)
+  def removeJourneyDataField(journeyId: String, authInternalId: String, dataKey: String): Future[Boolean] =
+    collection.updateOne(
+      filterJourneyConfig(journeyId, authInternalId),
+      Updates.unset(dataKey)
+    ).toFuture.map {
+      _.getMatchedCount == 1
+    }
 
-  def removeJourneyData(journeyId: String, authInternalId: String): Future[UpdateWriteResult] =
-    collection.update(true).one(
+  def removeJourneyData(journeyId: String, authInternalId: String): Future[Boolean] =
+    collection.findOneAndReplace(
+      filterJourneyConfig(journeyId, authInternalId),
       Json.obj(
-        journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId
-      ),
-      Json.obj(
-        journeyIdKey -> journeyId,
-        authInternalIdKey -> authInternalId,
+        JourneyIdKey -> journeyId,
+        AuthInternalIdKey -> authInternalId,
         CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
-      ),
-      upsert = false,
-      multi = false
-    ).filter(_.n == 1)
-
-  private lazy val ttlIndex = Index(
-    key = Seq((CreationTimestampKey, IndexType.Ascending)),
-    name = Some("IncorporatedEntityInformationExpires"),
-    options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
-  )
-
-  private def setIndex(): Unit = {
-    collection.indexesManager.drop(ttlIndex.name.get) onComplete {
-      _ => collection.indexesManager.ensure(ttlIndex)
-    }
-  }
-
-  override def drop(implicit ec: ExecutionContext): Future[Boolean] =
-    collection.drop(failIfNotFound = false).map { r =>
-      setIndex()
-      r
+      )
+    ).toFuture.map {
+      _ != null
     }
 
-  setIndex()
+  def drop: Future[Unit] = collection.drop().toFuture.map(_ => Unit)
 
+  private def filterJourneyConfig(journeyId: String, authInternalId: String): Bson =
+    Filters.and(
+      Filters.equal(JourneyIdKey, journeyId),
+      Filters.equal(AuthInternalIdKey, authInternalId)
+    )
 }
 
 object JourneyDataRepository {
-  val journeyIdKey: String = "_id"
-  val authInternalIdKey: String = "authInternalId"
+  val JourneyIdKey: String = "_id"
+  val AuthInternalIdKey: String = "authInternalId"
   val CreationTimestampKey: String = "creationTimestamp"
+
+  def timeToLiveIndex(timeToLiveDuration: Long): IndexModel = IndexModel(
+    keys = ascending(CreationTimestampKey),
+    indexOptions = IndexOptions()
+      .name("IncorporatedEntityInformationExpires")
+      .expireAfter(timeToLiveDuration, TimeUnit.SECONDS)
+  )
 }

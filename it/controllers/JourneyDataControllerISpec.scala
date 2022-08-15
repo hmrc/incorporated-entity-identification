@@ -23,14 +23,16 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Json}
 import play.api.test.Helpers._
-import reactivemongo.play.json.ImplicitBSONHandlers.JsObjectDocumentWriter
 import stubs.{AuthStub, FakeJourneyIdGenerationService}
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyIdGenerationService
 import utils.{ComponentSpecHelper, CustomMatchers, JourneyDataMongoHelper}
 
 class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers with JourneyDataMongoHelper with AuthStub {
   lazy val testJourneyId = "testJourneyId"
   lazy val testIncorrectAuthInternalId = "testIncorrectAuthInternalId"
+  lazy val testDataKey = "testDataKey"
+  lazy val testDataValue = "testDataValue"
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .overrides(bind[JourneyIdGenerationService].toInstance(new FakeJourneyIdGenerationService(testJourneyId)))
@@ -45,7 +47,8 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe CREATED
         (res.json \ "journeyId").as[String] mustBe testJourneyId
-        findById(testJourneyId).map(_.-("creationTimestamp")) mustBe Some(Json.obj("_id" -> testJourneyId, "authInternalId" -> testInternalId))
+        findById(testJourneyId, testInternalId).map(_.-(CreationTimestampKey)) mustBe
+          Some(Json.obj(JourneyIdKey -> testJourneyId, AuthInternalIdKey -> testInternalId))
       }
       "return Unauthorised" in {
         stubAuthFailure()
@@ -60,7 +63,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is data stored against the journey ID" should {
       "return all data stored against the journey ID" in {
         val testData = Json.obj(
-          "testField" -> "testValue"
+          testDataKey -> testDataValue
         )
 
         insertById(testJourneyId, testInternalId, testData)
@@ -68,8 +71,9 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
         val expectedData = Json.obj(
-          "testField" -> "testValue",
-          "authInternalId" -> testInternalId
+          JourneyIdKey -> testJourneyId,
+          AuthInternalIdKey -> testInternalId,
+          testDataKey -> testDataValue
         )
 
         val res = get(s"/journey/$testJourneyId")
@@ -104,7 +108,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         stubAuth(OK, successfulAuthResponse(Some(testIncorrectAuthInternalId)))
 
         val testData = Json.obj(
-          "testField" -> "testValue"
+          testDataKey -> testDataValue
         )
         insertById(testJourneyId, testInternalId, testData)
 
@@ -119,8 +123,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is data stored against the journey ID containing the value in dataKey" should {
       "return all the data stored against the journeyId and dataKey" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
 
         val testData = Json.obj(
           testDataKey -> testDataValue
@@ -137,7 +139,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is data stored against the journey ID but no data for the dataKey" should {
       "return NOT FOUND with a code indicating there is no data" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
 
         insertById(testJourneyId, testInternalId)
 
@@ -154,7 +155,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is no data stored against the journey ID" should {
       "return all the data stored against the journeyId and dataKey" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
 
         insertById(testJourneyId, testInternalId)
 
@@ -182,7 +182,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "the provided internal ID does not match the ID on the record" should {
       "return Not Found" in {
         stubAuth(OK, successfulAuthResponse(Some(testIncorrectAuthInternalId)))
-        val testDataKey = "testDataKey"
 
         val res = get(s"/journey/$testJourneyId/$testDataKey")
 
@@ -196,8 +195,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is a journey for the provided journey ID" should {
       "update the data with the provided data" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
 
         insertById(testJourneyId, testInternalId)
 
@@ -205,10 +202,10 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe OK
 
-        findById(testJourneyId) mustBe Some(
+        findById(testJourneyId, testInternalId) mustBe Some(
           Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
+            JourneyIdKey -> testJourneyId,
+            AuthInternalIdKey -> testInternalId,
             testDataKey -> testDataValue
           )
         )
@@ -217,22 +214,17 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is no journey for the provided journey ID" should {
       "return Internal Server Error" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
 
         val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
 
         res.status mustBe INTERNAL_SERVER_ERROR
 
-        findById(testJourneyId) mustBe None
+        findById(testJourneyId, testInternalId) mustBe None
       }
     }
     "the user cannot be authorised" should {
       "return Unauthorised" in {
         stubAuthFailure()
-
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
 
         val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
 
@@ -242,8 +234,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "the provided internal ID does not match the ID on the record" should {
       "return Internal Server Error" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
 
         insertById(testJourneyId, testIncorrectAuthInternalId)
 
@@ -258,8 +248,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is a journey for the provided journey ID" should {
       "remove the data with the provided data key" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
 
         insertById(testJourneyId, testInternalId, Json.obj(testDataKey -> testDataValue))
 
@@ -267,10 +255,29 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe NO_CONTENT
 
-        findById(testJourneyId) mustBe Some(
+        findById(testJourneyId, testInternalId) mustBe Some(
           Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId
+            JourneyIdKey -> testJourneyId,
+            AuthInternalIdKey -> testInternalId
+          )
+        )
+      }
+      "return NO_CONTENT if the data field does not exist" in {
+        val alternativeTestDataKey: String = "testAlternativeDataKey"
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        insertById(testJourneyId, testInternalId, Json.obj(testDataKey -> testDataValue))
+
+        val res = delete(s"/journey/$testJourneyId/$alternativeTestDataKey")
+
+        res.status mustBe NO_CONTENT
+
+        findById(testJourneyId, testInternalId) mustBe Some(
+          Json.obj(
+            JourneyIdKey -> testJourneyId,
+            AuthInternalIdKey -> testInternalId,
+            testDataKey -> testDataValue
           )
         )
       }
@@ -278,13 +285,12 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is no journey for the provided journey ID" should {
       "return Internal Server Error" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
 
         val res = delete(s"/journey/$testJourneyId/$testDataKey")
 
         res.status mustBe INTERNAL_SERVER_ERROR
 
-        findById(testJourneyId) mustBe None
+        findById(testJourneyId, testInternalId) mustBe None
       }
     }
     "the user cannot be authorised" should {
@@ -304,9 +310,6 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "there is a journey for the provided journey ID" should {
       "remove the data from the record" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        val testDataKey = "testDataKey"
-        val testDataValue = "testDataValue"
-        val creationTimestampKey: String = "creationTimestamp"
 
         insertById(testJourneyId, testInternalId, Json.obj(testDataKey -> testDataValue))
 
@@ -314,15 +317,14 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe NO_CONTENT
 
-        findById(testJourneyId).map(_.-(creationTimestampKey)) mustBe Some(
+        findById(testJourneyId, testInternalId).map(_.-(CreationTimestampKey)) mustBe Some(
           Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId
+            JourneyIdKey -> testJourneyId,
+            AuthInternalIdKey -> testInternalId
           )
         )
 
-        findById(testJourneyId).map(_.keys.contains(creationTimestampKey)) mustBe Some(true)
-
+        findById(testJourneyId, testInternalId).map(_.keys.contains(CreationTimestampKey)) mustBe Some(true)
       }
     }
     "there is no journey for the provided journey ID" should {
@@ -333,7 +335,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe INTERNAL_SERVER_ERROR
 
-        findById(testJourneyId) mustBe None
+        findById(testJourneyId, testInternalId) mustBe None
       }
     }
     "the user cannot be authorised" should {
