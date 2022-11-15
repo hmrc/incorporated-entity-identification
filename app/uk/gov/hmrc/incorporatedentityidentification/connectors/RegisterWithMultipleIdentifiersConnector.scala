@@ -59,7 +59,6 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
 
   }
 
-
   def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
     val jsonBody: JsObject =
       Json.obj(
