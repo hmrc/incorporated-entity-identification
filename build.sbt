@@ -25,8 +25,8 @@ lazy val microservice = Project(appName, file("."))
   .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)
 
-Keys.fork in IntegrationTest := true
-unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value
-javaOptions in IntegrationTest += "-Dlogger.resource=logback-test.xml"
+IntegrationTest / Keys.fork := true
+IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory) (base => Seq(base / "it")).value
+IntegrationTest / javaOptions += "-Dlogger.resource=logback-test.xml"
 addTestReportOption(IntegrationTest, "int-test-reports")
-parallelExecution in IntegrationTest := false
+IntegrationTest / parallelExecution := false
