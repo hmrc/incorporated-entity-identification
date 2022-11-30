@@ -25,29 +25,35 @@ This can be done in one of two ways;
 ]
 ```
 
+
+### Feature Switches
+
+- [Get CT reference stub](TestREADME.md#get-test-onlycorporation-taxidentifierscrncompanynumber)
+- [DES stub](TestREADME.md#post-test-onlycross-regimeregistergrs)
+
 ### GET /test-only/corporation-tax/identifiers/crn/:companyNumber
 
 ---
-Stubs a call to retrieve a CTUTR from the database, must have the corresponding feature switch enabled.
+Stubs a call to Get CT Reference API #1380 to retrieve a CTUTR from the database, must have the corresponding feature switch enabled.
 
 #### Request:
 URI must contain a company number
 
 Company Numbers are mapped to specific CTUTRs
 
-| Company Number  | CTUTR
-|-----------------|------------------------------
-| ```12345678```  |  ```1234567890```
-| ```99999999```  |  ```0987654321```
-| ```00000000```  |  ```None```
+| Company Number  | CTUTR            |
+|-----------------|------------------|
+| ```12345678```  | ```1234567890``` |
+| ```99999999```  | ```0987654321``` |
+| ```00000000```  | ```None```       |
 
 
 #### Response:
 
-| Expected Status                         | Reason
-|-----------------------------------------|------------------------------
-| ```OK(200)```                           |  ```CTUTR found```
-| ```NOT_FOUND(404)```                    |  ```No CTUTR found in database```
+| Expected Status                         | Reason                             |
+|-----------------------------------------|------------------------------------|
+| ```OK(200)```                           | ```CTUTR found```                  |
+| ```NOT_FOUND(404)```                    | ```No CTUTR found in database```   |
 
 Example Response body:
 
