@@ -23,7 +23,7 @@ import play.api.test.Helpers._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
-import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser.{Failures, RegisterWithMultipleIdentifiersFailure, RegisterWithMultipleIdentifiersSuccess}
+import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.{Failures, RegisterWithMultipleIdentifiersFailure, RegisterWithMultipleIdentifiersSuccess}
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{DesStub, FeatureSwitching}
 import utils.ComponentSpecHelper
 
