@@ -32,12 +32,12 @@ object GetCtReferenceHttpParser {
             case JsSuccess(ctutr, _) =>
               Some(ctutr)
             case JsError(errors) =>
-              throw new InternalServerException(s"Get CT Reference returned malformed JSON with the following errors: $errors")
+              throw new InternalServerException(s"HoD returned a malformed JSON on $method <$url> errors: $errors")
           }
         case NOT_FOUND =>
           None
         case status =>
-          throw new InternalServerException(s"Get CT Reference failed with status: $status, body: ${response.body} and headers: ${response.headers}")
+          throw new InternalServerException(s"HoD returned status code <$status> on $method <$url>")
       }
     }
   }
