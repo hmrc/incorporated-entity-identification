@@ -61,7 +61,7 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent, appConfig:
       filterJourneyConfig(journeyId, authInternalId),
       Updates.set(dataKey, Codecs.toBson(data)),
       UpdateOptions().upsert(false)
-    ).toFuture.map {
+    ).toFuture().map {
       _.getMatchedCount == 1
     }
 
@@ -69,7 +69,7 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent, appConfig:
     collection.updateOne(
       filterJourneyConfig(journeyId, authInternalId),
       Updates.unset(dataKey)
-    ).toFuture.map {
+    ).toFuture().map {
       _.getMatchedCount == 1
     }
 
@@ -81,11 +81,11 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent, appConfig:
         AuthInternalIdKey -> authInternalId,
         CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
       )
-    ).toFuture.map {
+    ).toFuture().map {
       _ != null
     }
 
-  def drop: Future[Unit] = collection.drop().toFuture.map(_ => Unit)
+  def drop: Future[Unit] = collection.drop().toFuture().map(_ => ())
 
   private def filterJourneyConfig(journeyId: String, authInternalId: String): Bson =
     Filters.and(

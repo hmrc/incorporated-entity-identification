@@ -36,7 +36,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
     .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
-    .build
+    .build()
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
@@ -71,7 +71,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   }
 
   def get[T](uri: String): WSResponse = {
-    await(buildClient(uri).withHttpHeaders("Authorization" -> "Bearer123").get)
+    await(buildClient(uri).withHttpHeaders("Authorization" -> "Bearer123").get())
   }
 
   def post[T](uri: String)(body: T)(implicit writes: Writes[T]): WSResponse = {

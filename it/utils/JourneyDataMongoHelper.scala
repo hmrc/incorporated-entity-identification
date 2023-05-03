@@ -39,7 +39,7 @@ trait JourneyDataMongoHelper extends BeforeAndAfterEach {
         Json.obj(
           JourneyIdKey -> journeyId,
           AuthInternalIdKey -> authInternalId) ++ data
-      ).toFuture().map(_ => Unit)
+      ).toFuture().map(_ => ())
     )
 
   override def beforeEach(): Unit = {
