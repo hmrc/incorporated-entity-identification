@@ -34,56 +34,70 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyDataRepository @Inject()(mongoComponent: MongoComponent, appConfig: AppConfig)
-                                     (implicit ec: ExecutionContext) extends PlayMongoRepository[JsObject](
-  collectionName = "incorporated-entity-identification",
-  mongoComponent = mongoComponent,
-  domainFormat = implicitly[Format[JsObject]],
-  indexes = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds))
-){
+class JourneyDataRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[JsObject](
+      collectionName = "incorporated-entity-identification",
+      mongoComponent = mongoComponent,
+      domainFormat   = implicitly[Format[JsObject]],
+      indexes        = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds))
+    ) {
 
   def createJourney(journeyId: String, authInternalId: String): Future[String] =
-    collection.insertOne(
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId,
-        CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
+    collection
+      .insertOne(
+        Json.obj(
+          JourneyIdKey         -> journeyId,
+          AuthInternalIdKey    -> authInternalId,
+          CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        )
       )
-    ).toFuture().map(_ => journeyId)
+      .toFuture()
+      .map(_ => journeyId)
 
   def getJourneyData(journeyId: String, authInternalId: String): Future[Option[JsObject]] =
-    collection.find(
-      filterJourneyConfig(journeyId, authInternalId)
-    ).headOption()
+    collection
+      .find(
+        filterJourneyConfig(journeyId, authInternalId)
+      )
+      .headOption()
 
   def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Boolean] =
-    collection.updateOne(
-      filterJourneyConfig(journeyId, authInternalId),
-      Updates.set(dataKey, Codecs.toBson(data)),
-      UpdateOptions().upsert(false)
-    ).toFuture().map {
-      _.getMatchedCount == 1
-    }
+    collection
+      .updateOne(
+        filterJourneyConfig(journeyId, authInternalId),
+        Updates.set(dataKey, Codecs.toBson(data)),
+        UpdateOptions().upsert(false)
+      )
+      .toFuture()
+      .map {
+        _.getMatchedCount == 1
+      }
 
   def removeJourneyDataField(journeyId: String, authInternalId: String, dataKey: String): Future[Boolean] =
-    collection.updateOne(
-      filterJourneyConfig(journeyId, authInternalId),
-      Updates.unset(dataKey)
-    ).toFuture().map {
-      _.getMatchedCount == 1
-    }
+    collection
+      .updateOne(
+        filterJourneyConfig(journeyId, authInternalId),
+        Updates.unset(dataKey)
+      )
+      .toFuture()
+      .map {
+        _.getMatchedCount == 1
+      }
 
   def removeJourneyData(journeyId: String, authInternalId: String): Future[Boolean] =
-    collection.findOneAndReplace(
-      filterJourneyConfig(journeyId, authInternalId),
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId,
-        CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
+    collection
+      .findOneAndReplace(
+        filterJourneyConfig(journeyId, authInternalId),
+        Json.obj(
+          JourneyIdKey         -> journeyId,
+          AuthInternalIdKey    -> authInternalId,
+          CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        )
       )
-    ).toFuture().map {
-      _ != null
-    }
+      .toFuture()
+      .map {
+        _ != null
+      }
 
   def drop: Future[Unit] = collection.drop().toFuture().map(_ => ())
 

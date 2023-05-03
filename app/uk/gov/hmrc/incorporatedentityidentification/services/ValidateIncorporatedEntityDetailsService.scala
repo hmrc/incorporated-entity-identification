@@ -19,19 +19,22 @@ package uk.gov.hmrc.incorporatedentityidentification.services
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound, DetailsDownstreamError, IncorporatedEntityDetailsValidationResult}
+import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsDownstreamError, DetailsMatched, DetailsMismatched, DetailsNotFound, IncorporatedEntityDetailsValidationResult}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ValidateIncorporatedEntityDetailsService @Inject()(getCtReferenceConnector: GetCtReferenceConnector)(implicit ec: ExecutionContext) {
+class ValidateIncorporatedEntityDetailsService @Inject() (getCtReferenceConnector: GetCtReferenceConnector)(implicit ec: ExecutionContext) {
 
-  def validateDetails(companyNumber: String, optCtUtr: Option[String])(implicit hc: HeaderCarrier): Future[IncorporatedEntityDetailsValidationResult] = {
+  def validateDetails(companyNumber: String, optCtUtr: Option[String])(implicit
+    hc: HeaderCarrier
+  ): Future[IncorporatedEntityDetailsValidationResult] = {
     getCtReferenceConnector.getCtReference(companyNumber).map {
-      case Right(retrievedCtUtr) => optCtUtr match {
-        case Some(`retrievedCtUtr`) => DetailsMatched
-        case Some(_) | None         => DetailsMismatched
-      }
+      case Right(retrievedCtUtr) =>
+        optCtUtr match {
+          case Some(`retrievedCtUtr`) => DetailsMatched
+          case Some(_) | None         => DetailsMismatched
+        }
       case Left(error: NotFoundException) => DetailsNotFound(error.getMessage)
       case Left(error)                    => DetailsDownstreamError(error.getMessage)
     }

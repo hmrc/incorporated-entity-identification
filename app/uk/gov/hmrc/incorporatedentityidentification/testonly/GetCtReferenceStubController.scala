@@ -23,14 +23,14 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class GetCtReferenceStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
+class GetCtReferenceStubController @Inject() (controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   def getCtReference(companyNumber: String): Action[AnyContent] = Action {
     companyNumber match {
       case "00000000" =>
         NotFound(
           Json.obj(
-            "code" -> "NOT_FOUND",
+            "code"   -> "NOT_FOUND",
             "reason" -> "The back end has indicated that CT UTR cannot be returned"
           )
         )
@@ -49,7 +49,7 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     }
   }
 
-  //To be removed after E2E testing
+  // To be removed after E2E testing
   val e2eTestData = Map(
     "99999991" -> "1044814810",
     "99999992" -> "8851208889",
@@ -97,16 +97,16 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "23456936" -> "8177015384",
     "23456937" -> "9177001494",
     "CRN08444" -> "3300555807",
-    "9870551" -> "8177017961",
-    "9870552" -> "9177021920",
-    "9870553" -> "6177009072",
+    "9870551"  -> "8177017961",
+    "9870552"  -> "9177021920",
+    "9870553"  -> "6177009072",
     "76543219" -> "1220316477",
     "76543220" -> "1220316476",
     "76543225" -> "9220316469",
     "36123619" -> "6220316448",
-    "9870562" -> "7107807868",
-    "9870563" -> "1220316446",
-    "9870564" -> "7127001773",
-    "9870565" -> "7161525510"
+    "9870562"  -> "7107807868",
+    "9870563"  -> "1220316446",
+    "9870564"  -> "7127001773",
+    "9870565"  -> "7161525510"
   )
 }

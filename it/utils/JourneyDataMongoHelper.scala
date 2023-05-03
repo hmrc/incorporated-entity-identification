@@ -31,15 +31,16 @@ trait JourneyDataMongoHelper extends BeforeAndAfterEach {
   lazy val repo: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
   def findById(journeyId: String, authInternalId: String): Option[JsObject] =
-  await(repo.getJourneyData(journeyId, authInternalId))
+    await(repo.getJourneyData(journeyId, authInternalId))
 
   def insertById(journeyId: String, authInternalId: String, data: JsObject = Json.obj()): Unit =
     await(
-      repo.collection.insertOne(
-        Json.obj(
-          JourneyIdKey -> journeyId,
-          AuthInternalIdKey -> authInternalId) ++ data
-      ).toFuture().map(_ => ())
+      repo.collection
+        .insertOne(
+          Json.obj(JourneyIdKey -> journeyId, AuthInternalIdKey -> authInternalId) ++ data
+        )
+        .toFuture()
+        .map(_ => ())
     )
 
   override def beforeEach(): Unit = {

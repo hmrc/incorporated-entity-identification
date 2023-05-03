@@ -18,10 +18,7 @@ package uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.models
 
 import play.api.libs.json.{Json, OFormat}
 
-
-case class FeatureSwitchSetting(configName: String,
-                                displayName: String,
-                                isEnabled: Boolean)
+case class FeatureSwitchSetting(configName: String, displayName: String, isEnabled: Boolean)
 
 object FeatureSwitchSetting {
 

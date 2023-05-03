@@ -37,8 +37,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val ctutr = "123456"
 
       wireMockServer.stubFor(
-        WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-          .willReturn(okJson(s"""{"CTUTR": "$ctutr"}""").withHeader("Content-Type", "application/json")))
+        WireMock
+          .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+          .willReturn(okJson(s"""{"CTUTR": "$ctutr"}""").withHeader("Content-Type", "application/json"))
+      )
 
       val res = connector.getCtReference(companyNumber)
 
@@ -52,8 +54,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val companyNumber = "001"
 
       wireMockServer.stubFor(
-        WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-          .willReturn(notFound()))
+        WireMock
+          .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+          .willReturn(notFound())
+      )
 
       val response = connector.getCtReference(companyNumber)
 
@@ -67,8 +71,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val companyNumber = "001"
 
       wireMockServer.stubFor(
-        WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-          .willReturn(okJson("""{"unknown": true}""")))
+        WireMock
+          .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+          .willReturn(okJson("""{"unknown": true}"""))
+      )
 
       val result = await(connector.getCtReference(companyNumber))
 
@@ -81,8 +87,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val companyNumber = "001"
 
       wireMockServer.stubFor(
-        WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-          .willReturn(okJson("<html></html>")))
+        WireMock
+          .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+          .willReturn(okJson("<html></html>"))
+      )
 
       val result = await(connector.getCtReference(companyNumber))
 
@@ -95,8 +103,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val companyNumber = "001"
 
       wireMockServer.stubFor(
-        WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-          .willReturn(aResponse.withStatus(502).withBody("<html></html>")))
+        WireMock
+          .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+          .willReturn(aResponse.withStatus(502).withBody("<html></html>"))
+      )
 
       val result = await(connector.getCtReference(companyNumber))
 
@@ -112,8 +122,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val ctutr = "123456"
 
       wireMockServer.stubFor(
-        WireMock.get(urlPathMatching(s"/stubbed-url/corporation-tax/identifiers/crn/.*"))
-          .willReturn(okJson(s"""{"CTUTR": "$ctutr"}""").withHeader("Content-Type", "application/json")))
+        WireMock
+          .get(urlPathMatching(s"/stubbed-url/corporation-tax/identifiers/crn/.*"))
+          .willReturn(okJson(s"""{"CTUTR": "$ctutr"}""").withHeader("Content-Type", "application/json"))
+      )
 
       enable(StubGetCtReference)
       val res = connector.getCtReference(companyNumber)

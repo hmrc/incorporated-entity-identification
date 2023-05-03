@@ -31,9 +31,10 @@ import scala.concurrent.Future
 class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matchers with IdiomaticMockito with ResetMocksAfterEachTest {
   val mockGetCtReferenceConnector: GetCtReferenceConnector = mock[GetCtReferenceConnector]
 
-  object TestValidateIncorporateEntityDetailsService extends ValidateIncorporatedEntityDetailsService(
-    mockGetCtReferenceConnector
-  )
+  object TestValidateIncorporateEntityDetailsService
+      extends ValidateIncorporatedEntityDetailsService(
+        mockGetCtReferenceConnector
+      )
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val testCompanyNumber = "testCompanyNumber"
@@ -54,7 +55,9 @@ class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matc
 
         mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Right(testCtReference))
 
-        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(mismatchedTestCtReference))) mustBe DetailsMismatched
+        await(
+          TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(mismatchedTestCtReference))
+        ) mustBe DetailsMismatched
       }
 
       "the user asserts the unincorporated association does not have a Ct Utr, but one is found" in {
@@ -69,11 +72,12 @@ class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matc
       "there is no stored CT Reference for the provided Company Number" in {
         mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Left(new NotFoundException("Not Found")))
 
-        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsNotFound("Not Found")
+        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsNotFound(
+          "Not Found"
+        )
       }
     }
 
   }
-
 
 }

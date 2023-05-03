@@ -36,7 +36,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         val expectedJson = Json.obj("matched" -> true)
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -53,7 +53,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> "mismatch"
+          "ctutr"         -> "mismatch"
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -82,13 +82,13 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         stubGetCtReference("000000000")(status = NOT_FOUND)
 
         val expectedJson = Json.obj(
-          "code" -> "NOT_FOUND",
+          "code"   -> "NOT_FOUND",
           "reason" -> "HoD has indicated that CT UTR cannot be returned on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000>"
         )
 
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -104,8 +104,10 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
       "corporate-tax returns OK but body is a html (this happens in real life therefore a test to cover it)" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         wireMockServer.stubFor(
-          WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-            .willReturn(okJson("<html></html>")))
+          WireMock
+            .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+            .willReturn(okJson("<html></html>"))
+        )
 
         val expectedJson = Json.obj(
           "code" -> "BAD_GATEWAY",
@@ -113,7 +115,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         )
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -126,17 +128,19 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
       "corporate-tax returns error" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         wireMockServer.stubFor(
-          WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-            .willReturn(aResponse.withStatus(502)))
+          WireMock
+            .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+            .willReturn(aResponse.withStatus(502))
+        )
 
         val expectedJson = Json.obj(
-          "code" -> "BAD_GATEWAY",
+          "code"   -> "BAD_GATEWAY",
           "reason" -> "HoD returned status code <502> on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000>"
         )
 
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -153,7 +157,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)

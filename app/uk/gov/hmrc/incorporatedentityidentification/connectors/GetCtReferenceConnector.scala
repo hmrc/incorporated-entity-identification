@@ -24,9 +24,7 @@ import uk.gov.hmrc.incorporatedentityidentification.httpparsers.GetCtReferenceHt
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetCtReferenceConnector @Inject()(http: HttpClient,
-                                        appConfig: AppConfig
-                                       )(implicit ec: ExecutionContext) {
+class GetCtReferenceConnector @Inject() (http: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def getCtReference(companyNumber: String)(implicit hc: HeaderCarrier): Future[Either[HttpException, String]] = {
     val extraHeaders = Seq(

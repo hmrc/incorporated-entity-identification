@@ -25,17 +25,16 @@ import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.Fe
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.models.FeatureSwitchSetting
 
 @Singleton
-class FeatureSwitchApiController @Inject()(config: Configuration,
-                                           featureSwitchService: FeatureSwitchService
-                                          ) extends InjectedController with FeatureSwitching {
+class FeatureSwitchApiController @Inject() (config: Configuration, featureSwitchService: FeatureSwitchService)
+    extends InjectedController
+    with FeatureSwitching {
   def getFeatureSwitches(): Action[AnyContent] = Action {
     Ok(Json.toJson(featureSwitchService.getFeatureSwitches()))
   }
 
-  def updateFeatureSwitches(): Action[Seq[FeatureSwitchSetting]] = Action(parse.json[Seq[FeatureSwitchSetting]]) {
-    req =>
-      val updatedFeatureSwitches = featureSwitchService.updateFeatureSwitches(req.body)
-      Ok(Json.toJson(updatedFeatureSwitches))
+  def updateFeatureSwitches(): Action[Seq[FeatureSwitchSetting]] = Action(parse.json[Seq[FeatureSwitchSetting]]) { req =>
+    val updatedFeatureSwitches = featureSwitchService.updateFeatureSwitches(req.body)
+    Ok(Json.toJson(updatedFeatureSwitches))
   }
 
 }

@@ -21,6 +21,6 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class JourneyIdGenerationService @Inject()() {
+class JourneyIdGenerationService @Inject() () {
   def generateJourneyId(): String = UUID.randomUUID().toString
 }

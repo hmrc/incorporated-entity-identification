@@ -26,12 +26,14 @@ import play.api.libs.json.Writes
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
 
-trait ComponentSpecHelper extends AnyWordSpec with Matchers
-  with CustomMatchers
-  with WiremockHelper
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GuiceOneServerPerSuite {
+trait ComponentSpecHelper
+    extends AnyWordSpec
+    with Matchers
+    with CustomMatchers
+    with WiremockHelper
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GuiceOneServerPerSuite {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
@@ -43,14 +45,14 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   val mockUrl: String = s"http://$mockHost:$mockPort"
 
   def config: Map[String, String] = Map(
-    "auditing.enabled" -> "false",
+    "auditing.enabled"                                  -> "false",
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "microservice.services.auth.host" -> mockHost,
-    "microservice.services.auth.port" -> mockPort,
-    "microservice.services.base.host" -> mockHost,
-    "microservice.services.base.port" -> mockPort,
-    "microservice.services.des.stub-url" -> s"$mockUrl/stubbed-url",
-    "microservice.services.des.url" -> mockUrl
+    "microservice.services.auth.host"                   -> mockHost,
+    "microservice.services.auth.port"                   -> mockPort,
+    "microservice.services.base.host"                   -> mockHost,
+    "microservice.services.base.port"                   -> mockPort,
+    "microservice.services.des.stub-url"                -> s"$mockUrl/stubbed-url",
+    "microservice.services.des.url"                     -> mockUrl
   )
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]

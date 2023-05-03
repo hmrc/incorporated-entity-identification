@@ -26,7 +26,7 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
     Json.obj(
       "identification" -> Json.arr(
         Json.obj(
-          "idType" -> "SAFEID",
+          "idType"  -> "SAFEID",
           "idValue" -> safeId
         )
       )
@@ -36,14 +36,14 @@ trait RegisterWithMultipleIdentifiersStub extends WireMockMethods {
     when(method = POST, uri = s"/cross-regime/register/GRS\\?grsRegime=$regime", postBody)
       .thenReturn(
         status = status,
-        body = registerResponseSuccessBody(safeId)
+        body   = registerResponseSuccessBody(safeId)
       )
 
   def stubRegisterWithMultipleIdentifiersFailure(postBody: JsObject, regime: String)(status: Int, body: JsObject): StubMapping =
     when(method = POST, uri = s"/cross-regime/register/GRS\\?grsRegime=$regime", postBody)
       .thenReturn(
         status = status,
-        body = body
+        body   = body
       )
 
 }

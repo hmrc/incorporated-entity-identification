@@ -24,12 +24,16 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class RegisterWithMultipleIdentifiersService @Inject()(registerWithMultipleIdentifiersConnector: RegisterWithMultipleIdentifiersConnector) {
+class RegisterWithMultipleIdentifiersService @Inject() (registerWithMultipleIdentifiersConnector: RegisterWithMultipleIdentifiersConnector) {
 
-  def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] =
+  def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit
+    hc: HeaderCarrier
+  ): Future[RegisterWithMultipleIdentifiersResult] =
     registerWithMultipleIdentifiersConnector.registerLimitedCompany(companyNumber, ctutr, regime)
 
-  def registerRegisteredSociety(companyNumber: String, ctutr: String, regime:String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] =
+  def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit
+    hc: HeaderCarrier
+  ): Future[RegisterWithMultipleIdentifiersResult] =
     registerWithMultipleIdentifiersConnector.registerRegisteredSociety(companyNumber, ctutr, regime)
 
 }

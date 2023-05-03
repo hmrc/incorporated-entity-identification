@@ -22,7 +22,7 @@ import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{D
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends FeatureSwitching {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends FeatureSwitching {
 
   val authBaseUrl: String = servicesConfig.baseUrl("auth")
 

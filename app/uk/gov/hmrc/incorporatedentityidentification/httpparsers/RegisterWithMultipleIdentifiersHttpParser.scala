@@ -38,16 +38,20 @@ object RegisterWithMultipleIdentifiersHttpParser {
             safeId <- (response.json \ IdentificationKey \ 0 \ IdentificationValueKey).validate[String]
           } yield safeId) match {
             case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
-            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
+            case _: JsError           => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
           }
-        case _ => if (response.json.as[JsObject].keys.contains("failures")) {
-          (response.json \ "failures").validate[Array[Failures]] match {
-            case JsSuccess(failures, _) => RegisterWithMultipleIdentifiersFailure(response.status, failures)
-            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}") }
-        } else {
-          response.json.validate[Failures] match {
-            case JsSuccess(failure, _) => RegisterWithMultipleIdentifiersFailure(response.status, Array(failure))
-            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}") } }
+        case _ =>
+          if (response.json.as[JsObject].keys.contains("failures")) {
+            (response.json \ "failures").validate[Array[Failures]] match {
+              case JsSuccess(failures, _) => RegisterWithMultipleIdentifiersFailure(response.status, failures)
+              case _: JsError             => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
+            }
+          } else {
+            response.json.validate[Failures] match {
+              case JsSuccess(failure, _) => RegisterWithMultipleIdentifiersFailure(response.status, Array(failure))
+              case _: JsError            => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
+            }
+          }
       }
     }
   }

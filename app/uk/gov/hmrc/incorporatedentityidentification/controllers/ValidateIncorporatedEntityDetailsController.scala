@@ -27,15 +27,18 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerComponents,
-                                                            validateIncorporatedEntityDetailsService: ValidateIncorporatedEntityDetailsService,
-                                                            val authConnector: AuthConnector
-                                                           )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
+class ValidateIncorporatedEntityDetailsController @Inject() (cc: ControllerComponents,
+                                                             validateIncorporatedEntityDetailsService: ValidateIncorporatedEntityDetailsService,
+                                                             val authConnector: AuthConnector
+                                                            )(implicit ec: ExecutionContext)
+    extends BackendController(cc)
+    with AuthorisedFunctions {
 
-  def validateDetails(): Action[IncorporatedEntityDetailsModel] = Action.async(parse.json[IncorporatedEntityDetailsModel]) {
-    implicit request =>
-      authorised() {
-        validateIncorporatedEntityDetailsService.validateDetails(request.body.companyNumber, request.body.ctutr).map {
+  def validateDetails(): Action[IncorporatedEntityDetailsModel] = Action.async(parse.json[IncorporatedEntityDetailsModel]) { implicit request =>
+    authorised() {
+      validateIncorporatedEntityDetailsService
+        .validateDetails(request.body.companyNumber, request.body.ctutr)
+        .map {
           case DetailsMatched =>
             Ok(Json.obj("matched" -> true))
           case DetailsMismatched =>
@@ -44,11 +47,11 @@ class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerCompon
             BadRequest(Json.obj("code" -> "NOT_FOUND", "reason" -> message))
           case DetailsDownstreamError(message) =>
             BadGateway(Json.obj("code" -> "BAD_GATEWAY", "reason" -> message))
-        }.recoverWith {
-          case e =>
-            Future.apply(BadGateway(Json.obj("code" -> "INTERNAL_SERVER_ERROR", "reason" -> e.getMessage)))
         }
-      }
+        .recoverWith { case e =>
+          Future.apply(BadGateway(Json.obj("code" -> "INTERNAL_SERVER_ERROR", "reason" -> e.getMessage)))
+        }
+    }
   }
 
 }

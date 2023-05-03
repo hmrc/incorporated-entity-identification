@@ -24,7 +24,7 @@ trait GetCtReferenceStub extends WireMockMethods {
 
   private val desHeaders = Map(
     "Authorization" -> "Bearer dev",
-    "Environment" -> "dev"
+    "Environment"   -> "dev"
   )
 
   def stubGetCtReference(companyNumber: String)(status: Int, body: JsValue = Json.obj()): StubMapping =

@@ -24,18 +24,17 @@ import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMult
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
-                                                         appConfig: AppConfig
-                                                        )(implicit ec: ExecutionContext) {
+class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def registerLimitedCompany(companyNumber: String,
-                             ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit
+    hc: HeaderCarrier
+  ): Future[RegisterWithMultipleIdentifiersResult] = {
 
     val jsonBody: JsObject =
       Json.obj(
         "company" ->
           Json.obj(
-            "crn" -> companyNumber,
+            "crn"   -> companyNumber,
             "ctutr" -> ctutr
           )
       )
@@ -47,9 +46,9 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
 
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
-      url = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
+      url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
-      body = jsonBody
+      body    = jsonBody
     )(
       implicitly[Writes[JsObject]],
       RegisterWithMultipleIdentifiersHttpReads,
@@ -58,13 +57,14 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
   }
 
-  def registerRegisteredSociety(companyNumber: String,
-                                ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit
+    hc: HeaderCarrier
+  ): Future[RegisterWithMultipleIdentifiersResult] = {
     val jsonBody: JsObject =
       Json.obj(
         "registeredSociety" ->
           Json.obj(
-            "crn" -> companyNumber,
+            "crn"   -> companyNumber,
             "ctutr" -> ctutr
           )
       )
@@ -76,9 +76,9 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
 
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
-      url = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
+      url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
-      body = jsonBody
+      body    = jsonBody
     )(
       implicitly[Writes[JsObject]],
       RegisterWithMultipleIdentifiersHttpReads,
