@@ -17,6 +17,8 @@
 package controllers
 
 import assets.TestConstants._
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, getRequestedFor, okJson, urlPathEqualTo, urlPathMatching}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import stubs.{AuthStub, GetCtReferenceStub}
@@ -91,11 +93,60 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val result = post("/validate-details")(suppliedJson)
 
-        result.status mustBe BAD_REQUEST
+        result.status mustBe NOT_FOUND
         result.json mustBe expectedJson
       }
 
     }
+
+    "delegates error when downstream has failed" when {
+
+      "corporate-tax returns OK but body is a html (this happens in real life therefore a test to cover it)" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        wireMockServer.stubFor(
+          WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+            .willReturn(okJson("<html></html>")))
+
+        val expectedJson = Json.obj(
+          "code" -> "BAD_GATEWAY",
+          "reason" -> "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000> errors: Unexpected character ('<' (code 60)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: (String)\"<html></html>\"; line: 1, column: 2]"
+        )
+        val suppliedJson = Json.obj(
+          "companyNumber" -> "000000000",
+          "ctutr" -> testCtutr
+        )
+
+        val result = post("/validate-details")(suppliedJson)
+
+        result.status mustBe BAD_GATEWAY
+        result.json mustBe expectedJson
+        wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/000000000")))
+      }
+
+      "corporate-tax returns error" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        wireMockServer.stubFor(
+          WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+            .willReturn(aResponse.withStatus(502)))
+
+        val expectedJson = Json.obj(
+          "code" -> "BAD_GATEWAY",
+          "reason" -> "HoD returned status code <502> on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000>"
+        )
+
+        val suppliedJson = Json.obj(
+          "companyNumber" -> "000000000",
+          "ctutr" -> testCtutr
+        )
+
+        val result = post("/validate-details")(suppliedJson)
+
+        result.status mustBe BAD_GATEWAY
+        result.json mustBe expectedJson
+        wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/000000000")))
+      }
+    }
+
     "return Unauthorised" when {
       "there is an auth failure" in {
         stubAuthFailure()

@@ -18,7 +18,9 @@ package uk.gov.hmrc.incorporatedentityidentification.httpparsers
 
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.{JsError, JsSuccess}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+import uk.gov.hmrc.http.{BadGatewayException, HttpReads, HttpResponse}
+
+import scala.util.{Failure, Success, Try}
 
 object GetCtReferenceHttpParser {
 
@@ -28,18 +30,22 @@ object GetCtReferenceHttpParser {
     override def read(method: String, url: String, response: HttpResponse): Option[String] = {
       response.status match {
         case OK =>
-          (response.json \ ctutrKey).validate[String] match {
-            case JsSuccess(ctutr, _) =>
-              Some(ctutr)
-            case JsError(errors) =>
-              throw new InternalServerException(s"HoD returned a malformed JSON on $method <$url> errors: $errors")
+          Try(response.json) match {
+            case Failure(exception) =>
+              throw new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: ${exception.getMessage}")
+            case Success(json) =>
+              (json \ ctutrKey).validate[String] match {
+                case JsSuccess(ctutr, _) =>
+                  Some(ctutr)
+                case JsError(errors) =>
+                  throw new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: $errors")
+              }
           }
         case NOT_FOUND =>
           None
         case status =>
-          throw new InternalServerException(s"HoD returned status code <$status> on $method <$url>")
+          throw new BadGatewayException(s"HoD returned status code <$status> on $method <$url>")
       }
     }
   }
-
 }

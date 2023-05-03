@@ -16,11 +16,10 @@
 
 package connectors
 
-import com.fasterxml.jackson.core.JsonParseException
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitching, StubGetCtReference}
 import utils.ComponentSpecHelper
@@ -70,7 +69,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(okJson("""{"unknown": true}""")))
 
-      assertThrows[InternalServerException] {
+      assertThrows[BadGatewayException] {
         await(connector.getCtReference(companyNumber))
       }
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
@@ -83,7 +82,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(okJson("<html></html>")))
 
-      assertThrows[JsonParseException] {
+      assertThrows[BadGatewayException] {
         await(connector.getCtReference(companyNumber))
       }
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
@@ -96,7 +95,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(aResponse.withStatus(502).withBody("<html></html>")))
 
-      assertThrows[InternalServerException] {
+      assertThrows[BadGatewayException] {
         await(connector.getCtReference(companyNumber))
       }
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
