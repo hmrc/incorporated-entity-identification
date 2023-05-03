@@ -73,7 +73,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val result = await(connector.getCtReference(companyNumber))
 
       result.left.value mustBe a[BadGatewayException]
-      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object: {\"unknown\":true}),ArraySeq()))))"
+      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object: {\"unknown\":true}),WrappedArray()))))"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
 
