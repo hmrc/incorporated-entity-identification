@@ -18,8 +18,9 @@ package connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
+import org.scalatest.EitherValues._
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier}
+import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitching, StubGetCtReference}
 import utils.ComponentSpecHelper
@@ -41,12 +42,12 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
 
       val res = connector.getCtReference(companyNumber)
 
-      await(res) mustBe Some(ctutr)
+      await(res) mustBe Right(ctutr)
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
   }
 
-  "returns None" when {
+  "returns a wrapped exception with further information" when {
     "DES returns 404 for the given company number" in {
       val companyNumber = "001"
 
@@ -54,14 +55,14 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(notFound()))
 
-      val res = connector.getCtReference(companyNumber)
+      val response = connector.getCtReference(companyNumber)
 
-      await(res) mustBe None
+      val result = await(response)
+      result.left.value mustBe a[NotFoundException]
+      result.left.value.message mustBe "HoD has indicated that CT UTR cannot be returned on GET <http://localhost:11111/corporation-tax/identifiers/crn/001>"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
-  }
 
-  "throws an exception and returns error status" when {
     "DES returns OK but the body is malformed" in {
       val companyNumber = "001"
 
@@ -69,9 +70,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(okJson("""{"unknown": true}""")))
 
-      assertThrows[BadGatewayException] {
-        await(connector.getCtReference(companyNumber))
-      }
+      val result = await(connector.getCtReference(companyNumber))
+
+      result.left.value mustBe a[BadGatewayException]
+      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object: {\"unknown\":true}),WrappedArray()))))"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
 
@@ -82,9 +84,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(okJson("<html></html>")))
 
-      assertThrows[BadGatewayException] {
-        await(connector.getCtReference(companyNumber))
-      }
+      val result = await(connector.getCtReference(companyNumber))
+
+      result.left.value mustBe a[BadGatewayException]
+      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: Unexpected character ('<' (code 60)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: (String)\"<html></html>\"; line: 1, column: 2]"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
 
@@ -95,9 +98,10 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
         WireMock.get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
           .willReturn(aResponse.withStatus(502).withBody("<html></html>")))
 
-      assertThrows[BadGatewayException] {
-        await(connector.getCtReference(companyNumber))
-      }
+      val result = await(connector.getCtReference(companyNumber))
+
+      result.left.value mustBe a[BadGatewayException]
+      result.left.value.message mustBe "HoD returned status code <502> on GET <http://localhost:11111/corporation-tax/identifiers/crn/001>"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
   }
@@ -115,7 +119,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val res = connector.getCtReference(companyNumber)
       disable(StubGetCtReference)
 
-      await(res) mustBe Some(ctutr)
+      await(res) mustBe Right(ctutr)
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/stubbed-url/corporation-tax/identifiers/crn/$companyNumber")))
     }
   }

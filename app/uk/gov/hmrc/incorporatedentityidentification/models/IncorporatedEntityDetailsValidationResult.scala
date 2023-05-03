@@ -22,4 +22,6 @@ case object DetailsMatched extends IncorporatedEntityDetailsValidationResult
 
 case object DetailsMismatched extends IncorporatedEntityDetailsValidationResult
 
-case object DetailsNotFound extends IncorporatedEntityDetailsValidationResult
+case class DetailsNotFound(message: String) extends IncorporatedEntityDetailsValidationResult
+
+case class DetailsDownstreamError(message: String) extends IncorporatedEntityDetailsValidationResult

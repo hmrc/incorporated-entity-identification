@@ -19,8 +19,7 @@ package uk.gov.hmrc.incorporatedentityidentification.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.http.BadGatewayException
-import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound, IncorporatedEntityDetailsModel}
+import uk.gov.hmrc.incorporatedentityidentification.models._
 import uk.gov.hmrc.incorporatedentityidentification.services.ValidateIncorporatedEntityDetailsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -41,11 +40,13 @@ class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerCompon
             Ok(Json.obj("matched" -> true))
           case DetailsMismatched =>
             Ok(Json.obj("matched" -> false))
-          case DetailsNotFound =>
-            NotFound(Json.obj("code" -> "NOT_FOUND", "reason" -> "The back end has indicated that CT UTR cannot be returned"))
+          case DetailsNotFound(message) =>
+            NotFound(Json.obj("code" -> "NOT_FOUND", "reason" -> message))
+          case DetailsDownstreamError(message) =>
+            BadGateway(Json.obj("code" -> "BAD_GATEWAY", "reason" -> message))
         }.recoverWith {
-          case e: BadGatewayException =>
-            Future.apply(BadGateway(Json.obj("code" -> "BAD_GATEWAY", "reason" -> e.getMessage)))
+          case e =>
+            Future.apply(BadGateway(Json.obj("code" -> "INTERNAL_SERVER_ERROR", "reason" -> e.getMessage)))
         }
       }
   }

@@ -20,7 +20,7 @@ import org.mockito.scalatest.{IdiomaticMockito, ResetMocksAfterEachTest}
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers._
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
 import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound}
 import uk.gov.hmrc.incorporatedentityidentification.services.ValidateIncorporatedEntityDetailsService
@@ -42,7 +42,7 @@ class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matc
   "validateDetails" should {
     s"return $DetailsMatched" when {
       "the supplied CT Reference matches the stored CT Reference" in {
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Some(testCtReference))
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Right(testCtReference))
 
         await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsMatched
       }
@@ -52,14 +52,14 @@ class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matc
       "the supplied CT Reference does not match the stored CT Reference" in {
         val mismatchedTestCtReference = "mismatchedTestCtReference"
 
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Some(testCtReference))
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Right(testCtReference))
 
         await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(mismatchedTestCtReference))) mustBe DetailsMismatched
       }
 
       "the user asserts the unincorporated association does not have a Ct Utr, but one is found" in {
 
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Some(testCtReference))
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Right(testCtReference))
 
         await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, None)) mustBe DetailsMismatched
       }
@@ -67,9 +67,9 @@ class ValidateIncorporatedEntityDetailsServiceSpec extends AnyWordSpec with Matc
     }
     s"return $DetailsNotFound" when {
       "there is no stored CT Reference for the provided Company Number" in {
-        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(None)
+        mockGetCtReferenceConnector.getCtReference(eqTo(testCompanyNumber)) returns Future.successful(Left(new NotFoundException("Not Found")))
 
-        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsNotFound
+        await(TestValidateIncorporateEntityDetailsService.validateDetails(testCompanyNumber, Some(testCtReference))) mustBe DetailsNotFound("Not Found")
       }
     }
 

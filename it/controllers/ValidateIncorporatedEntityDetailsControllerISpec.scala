@@ -83,7 +83,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val expectedJson = Json.obj(
           "code" -> "NOT_FOUND",
-          "reason" -> "The back end has indicated that CT UTR cannot be returned"
+          "reason" -> "HoD has indicated that CT UTR cannot be returned on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000>"
         )
 
         val suppliedJson = Json.obj(

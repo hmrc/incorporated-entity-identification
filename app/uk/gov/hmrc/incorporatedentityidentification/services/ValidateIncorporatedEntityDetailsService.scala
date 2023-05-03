@@ -17,9 +17,9 @@
 package uk.gov.hmrc.incorporatedentityidentification.services
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.{IncorporatedEntityDetailsValidationResult, DetailsMatched, DetailsMismatched, DetailsNotFound}
+import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound, DetailsDownstreamError, IncorporatedEntityDetailsValidationResult}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -28,11 +28,12 @@ class ValidateIncorporatedEntityDetailsService @Inject()(getCtReferenceConnector
 
   def validateDetails(companyNumber: String, optCtUtr: Option[String])(implicit hc: HeaderCarrier): Future[IncorporatedEntityDetailsValidationResult] = {
     getCtReferenceConnector.getCtReference(companyNumber).map {
-      case Some(retrievedCtUtr) => optCtUtr match {
+      case Right(retrievedCtUtr) => optCtUtr match {
         case Some(`retrievedCtUtr`) => DetailsMatched
-        case Some(_) | None => DetailsMismatched
+        case Some(_) | None         => DetailsMismatched
       }
-      case None => DetailsNotFound
+      case Left(error: NotFoundException) => DetailsNotFound(error.getMessage)
+      case Left(error)                    => DetailsDownstreamError(error.getMessage)
     }
   }
 
