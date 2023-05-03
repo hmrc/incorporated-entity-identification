@@ -87,7 +87,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val result = await(connector.getCtReference(companyNumber))
 
       result.left.value mustBe a[BadGatewayException]
-      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: Unexpected character ('<' (code 60)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: (String)\"<html></html>\"; line: 1, column: 2]"
+      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: Unexpected character ('<' (code 60)): ex"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
 

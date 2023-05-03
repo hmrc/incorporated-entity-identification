@@ -109,7 +109,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val expectedJson = Json.obj(
           "code" -> "BAD_GATEWAY",
-          "reason" -> "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000> errors: Unexpected character ('<' (code 60)): expected a valid value (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: (String)\"<html></html>\"; line: 1, column: 2]"
+          "reason" -> "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000> errors: Unexpected character ('<' (code 60)): ex"
         )
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",

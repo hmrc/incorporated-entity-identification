@@ -39,7 +39,7 @@ object GetCtReferenceHttpParser {
                   Left(new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: $errors"))
               }
             case Failure(exception) =>
-              Left(new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: ${exception.getMessage}"))
+              Left(new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: ${exception.getMessage.take(40)}"))
           }
         case NOT_FOUND =>
           Left(new NotFoundException(s"HoD has indicated that CT UTR cannot be returned on $method <$url>"))
