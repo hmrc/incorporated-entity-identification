@@ -41,7 +41,7 @@ class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerCompon
           case DetailsMismatched =>
             Ok(Json.obj("matched" -> false))
           case DetailsNotFound(message) =>
-            NotFound(Json.obj("code" -> "NOT_FOUND", "reason" -> message))
+            BadRequest(Json.obj("code" -> "NOT_FOUND", "reason" -> message))
           case DetailsDownstreamError(message) =>
             BadGateway(Json.obj("code" -> "BAD_GATEWAY", "reason" -> message))
         }.recoverWith {
