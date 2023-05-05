@@ -31,10 +31,8 @@ class ValidateIncorporatedEntityDetailsService @Inject() (getCtReferenceConnecto
   ): Future[IncorporatedEntityDetailsValidationResult] = {
     getCtReferenceConnector.getCtReference(companyNumber).map {
       case Right(retrievedCtUtr) =>
-        optCtUtr match {
-          case Some(`retrievedCtUtr`) => DetailsMatched
-          case Some(_) | None         => DetailsMismatched
-        }
+        if (optCtUtr contains retrievedCtUtr) DetailsMatched
+        else DetailsMismatched
       case Left(error: NotFoundException) => DetailsNotFound(error.getMessage)
       case Left(error)                    => DetailsDownstreamError(error.getMessage)
     }
