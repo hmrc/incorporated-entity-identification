@@ -17,10 +17,9 @@
 package uk.gov.hmrc.incorporatedentityidentification.httpparsers
 
 import play.api.http.Status.{NOT_FOUND, OK}
-import play.api.libs.json.{JsError, JsSuccess}
 import uk.gov.hmrc.http.{BadGatewayException, HttpException, HttpReads, HttpResponse, NotFoundException}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object GetCtReferenceHttpParser {
 
@@ -30,16 +29,13 @@ object GetCtReferenceHttpParser {
     override def read(method: String, url: String, response: HttpResponse): Either[HttpException, String] = {
       response.status match {
         case OK =>
-          Try(response.json) match {
-            case Success(json) =>
-              (json \ ctutrKey).validate[String] match {
-                case JsSuccess(ctutr, _) =>
-                  Right(ctutr)
-                case JsError(errors) =>
-                  Left(new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: $errors"))
-              }
-            case Failure(exception) =>
-              Left(new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: ${exception.getMessage.take(40)}"))
+          val result = for {
+            json  <- Try(response.json).toEither.left.map(_.getMessage take 40)
+            ctutr <- (json \ ctutrKey).validate[String].asEither.left.map(_.toString)
+          } yield ctutr
+
+          result.left.map { errors =>
+            new BadGatewayException(s"HoD returned a malformed JSON on $method <$url> errors: $errors")
           }
         case NOT_FOUND =>
           Left(new NotFoundException(s"HoD has indicated that CT UTR cannot be returned on $method <$url>"))
