@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.testonly
 
-
 import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -25,7 +24,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class RegisterWithMultipleIdentifiersStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
+class RegisterWithMultipleIdentifiersStubController @Inject() (controllerComponents: ControllerComponents)
+    extends BackendController(controllerComponents) {
 
   val singleFailureResultAsString: String =
     s"""{
@@ -51,33 +51,32 @@ class RegisterWithMultipleIdentifiersStubController @Inject()(controllerComponen
   val singleFailureResponseAsJson: JsObject = Json.parse(singleFailureResultAsString).as[JsObject]
   val multipleFailureResponseAsJson: JsObject = Json.parse(multipleFailureResultAsString).as[JsObject]
 
-  def registerWithMultipleIdentifiers(): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
-      val ctutr: String = (request.body \\ "ctutr").map(_.as[String]).head
+  def registerWithMultipleIdentifiers(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    val ctutr: String = (request.body \\ "ctutr").map(_.as[String]).head
 
-      val stubbedSafeId = {
-        if (e2eTestData.contains(ctutr)) e2eTestData(ctutr)
-        else "X00000123456789"
-      }
+    val stubbedSafeId = {
+      if (e2eTestData.contains(ctutr)) e2eTestData(ctutr)
+      else "X00000123456789"
+    }
 
-      ctutr match {
-        case "1111111111" => Future.successful(BadRequest(singleFailureResultAsString))
-        case "2222222222" => Future.successful(BadRequest(multipleFailureResponseAsJson))
-        case _ => Future.successful(Ok(createSuccessResponse(stubbedSafeId)))
-      }
+    ctutr match {
+      case "1111111111" => Future.successful(BadRequest(singleFailureResultAsString))
+      case "2222222222" => Future.successful(BadRequest(multipleFailureResponseAsJson))
+      case _            => Future.successful(Ok(createSuccessResponse(stubbedSafeId)))
+    }
   }
 
   private def createSuccessResponse(stubbedSafeId: String): JsObject =
     Json.obj(
       "identification" -> Json.arr(
         Json.obj(
-          "idType" -> "SAFEID",
+          "idType"  -> "SAFEID",
           "idValue" -> stubbedSafeId
         )
       )
     )
 
-  //PPT Test Data
+  // PPT Test Data
   val e2eTestData = Map(
     "2111234408" -> "XW0000100382303",
     "9111234409" -> "XA0000100382304",

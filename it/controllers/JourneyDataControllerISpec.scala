@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,9 +71,9 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
         val expectedData = Json.obj(
-          JourneyIdKey -> testJourneyId,
+          JourneyIdKey      -> testJourneyId,
           AuthInternalIdKey -> testInternalId,
-          testDataKey -> testDataValue
+          testDataKey       -> testDataValue
         )
 
         val res = get(s"/journey/$testJourneyId")
@@ -89,7 +89,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe NOT_FOUND
         res.json mustBe Json.obj(
-          "code" -> "NOT_FOUND",
+          "code"   -> "NOT_FOUND",
           "reason" -> s"No data exists for journey ID: $testJourneyId"
         )
       }
@@ -146,7 +146,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe NOT_FOUND
         res.json mustBe Json.obj(
-          "code" -> "NOT_FOUND",
+          "code"   -> "NOT_FOUND",
           "reason" -> s"No data exists for either journey ID: $testJourneyId or data key: $testDataKey"
         )
       }
@@ -162,7 +162,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         res.status mustBe NOT_FOUND
         res.json mustBe Json.obj(
-          "code" -> "NOT_FOUND",
+          "code"   -> "NOT_FOUND",
           "reason" -> s"No data exists for either journey ID: $testJourneyId or data key: $testDataKey"
         )
       }
@@ -204,9 +204,9 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         findById(testJourneyId, testInternalId) mustBe Some(
           Json.obj(
-            JourneyIdKey -> testJourneyId,
+            JourneyIdKey      -> testJourneyId,
             AuthInternalIdKey -> testInternalId,
-            testDataKey -> testDataValue
+            testDataKey       -> testDataValue
           )
         )
       }
@@ -257,7 +257,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         findById(testJourneyId, testInternalId) mustBe Some(
           Json.obj(
-            JourneyIdKey -> testJourneyId,
+            JourneyIdKey      -> testJourneyId,
             AuthInternalIdKey -> testInternalId
           )
         )
@@ -275,9 +275,9 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         findById(testJourneyId, testInternalId) mustBe Some(
           Json.obj(
-            JourneyIdKey -> testJourneyId,
+            JourneyIdKey      -> testJourneyId,
             AuthInternalIdKey -> testInternalId,
-            testDataKey -> testDataValue
+            testDataKey       -> testDataValue
           )
         )
       }
@@ -319,7 +319,7 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
 
         findById(testJourneyId, testInternalId).map(_.-(CreationTimestampKey)) mustBe Some(
           Json.obj(
-            JourneyIdKey -> testJourneyId,
+            JourneyIdKey      -> testJourneyId,
             AuthInternalIdKey -> testInternalId
           )
         )

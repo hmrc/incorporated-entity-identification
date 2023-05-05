@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package controllers
 
 import assets.TestConstants._
+import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, getRequestedFor, okJson, urlPathEqualTo, urlPathMatching}
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import stubs.{AuthStub, GetCtReferenceStub}
@@ -34,7 +36,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         val expectedJson = Json.obj("matched" -> true)
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -51,7 +53,7 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
 
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> "mismatch"
+          "ctutr"         -> "mismatch"
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -80,13 +82,13 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
         stubGetCtReference("000000000")(status = NOT_FOUND)
 
         val expectedJson = Json.obj(
-          "code" -> "NOT_FOUND",
-          "reason" -> "The back end has indicated that CT UTR cannot be returned"
+          "code"   -> "NOT_FOUND",
+          "reason" -> "HoD has indicated that CT UTR cannot be returned on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000>"
         )
 
         val suppliedJson = Json.obj(
           "companyNumber" -> "000000000",
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)
@@ -96,13 +98,66 @@ class ValidateIncorporatedEntityDetailsControllerISpec extends ComponentSpecHelp
       }
 
     }
+
+    "delegates error when downstream has failed" when {
+
+      "corporate-tax returns OK but body is a html (this happens in real life therefore a test to cover it)" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        wireMockServer.stubFor(
+          WireMock
+            .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+            .willReturn(okJson("<html></html>"))
+        )
+
+        val expectedJson = Json.obj(
+          "code" -> "BAD_GATEWAY",
+          "reason" -> "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000> errors: Unexpected character ('<' (code 60)): ex"
+        )
+        val suppliedJson = Json.obj(
+          "companyNumber" -> "000000000",
+          "ctutr"         -> testCtutr
+        )
+
+        val result = post("/validate-details")(suppliedJson)
+
+        result.status mustBe BAD_GATEWAY
+        result.json mustBe expectedJson
+        wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/000000000")))
+      }
+
+      "corporate-tax returns error" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        wireMockServer.stubFor(
+          WireMock
+            .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
+            .willReturn(aResponse.withStatus(502))
+        )
+
+        val expectedJson = Json.obj(
+          "code"   -> "BAD_GATEWAY",
+          "reason" -> "HoD returned status code <502> on GET <http://localhost:11111/corporation-tax/identifiers/crn/000000000>"
+        )
+
+        val suppliedJson = Json.obj(
+          "companyNumber" -> "000000000",
+          "ctutr"         -> testCtutr
+        )
+
+        val result = post("/validate-details")(suppliedJson)
+
+        result.status mustBe BAD_GATEWAY
+        result.json mustBe expectedJson
+        wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/000000000")))
+      }
+    }
+
     "return Unauthorised" when {
       "there is an auth failure" in {
         stubAuthFailure()
 
         val suppliedJson = Json.obj(
           "companyNumber" -> testCompanyNumber,
-          "ctutr" -> testCtutr
+          "ctutr"         -> testCtutr
         )
 
         val result = post("/validate-details")(suppliedJson)

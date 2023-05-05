@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,31 +26,33 @@ import play.api.libs.json.Writes
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
 
-trait ComponentSpecHelper extends AnyWordSpec with Matchers
-  with CustomMatchers
-  with WiremockHelper
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GuiceOneServerPerSuite {
+trait ComponentSpecHelper
+    extends AnyWordSpec
+    with Matchers
+    with CustomMatchers
+    with WiremockHelper
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GuiceOneServerPerSuite {
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
     .configure("play.http.router" -> "testOnlyDoNotUseInAppConf.Routes")
-    .build
+    .build()
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl: String = s"http://$mockHost:$mockPort"
 
   def config: Map[String, String] = Map(
-    "auditing.enabled" -> "false",
+    "auditing.enabled"                                  -> "false",
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "microservice.services.auth.host" -> mockHost,
-    "microservice.services.auth.port" -> mockPort,
-    "microservice.services.base.host" -> mockHost,
-    "microservice.services.base.port" -> mockPort,
-    "microservice.services.des.stub-url" -> mockUrl,
-    "microservice.services.des.url" -> mockUrl
+    "microservice.services.auth.host"                   -> mockHost,
+    "microservice.services.auth.port"                   -> mockPort,
+    "microservice.services.base.host"                   -> mockHost,
+    "microservice.services.base.port"                   -> mockPort,
+    "microservice.services.des.stub-url"                -> s"$mockUrl/stubbed-url",
+    "microservice.services.des.url"                     -> mockUrl
   )
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
@@ -71,7 +73,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   }
 
   def get[T](uri: String): WSResponse = {
-    await(buildClient(uri).withHttpHeaders("Authorization" -> "Bearer123").get)
+    await(buildClient(uri).withHttpHeaders("Authorization" -> "Bearer123").get())
   }
 
   def post[T](uri: String)(body: T)(implicit writes: Writes[T]): WSResponse = {

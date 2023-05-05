@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,11 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubRegisterWithMultipleIdentifiersSuccess(testRegisterCompanyJsonBody, testRegime)(OK, testSafeId)
         val jsonBody = Json.obj(
-          "crn" -> testCompanyNumber,
-          "ctutr" -> testCtutr,
+          "crn"    -> testCompanyNumber,
+          "ctutr"  -> testCtutr,
           "regime" -> testRegime
         )
-        val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTERED",
-            "registeredBusinessPartnerId" -> testSafeId))
+        val resultJson = Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> testSafeId))
 
         val result = post("/register-limited-company")(jsonBody)
         result.status mustBe OK
@@ -49,15 +46,13 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         stubRegisterWithMultipleIdentifiersFailure(testRegisterCompanyJsonBody, testRegime)(BAD_REQUEST, testRegisterResponseFailureBody)
         val jsonBody = Json.obj(
-          "crn" -> testCompanyNumber,
-          "ctutr" -> testCtutr,
+          "crn"    -> testCompanyNumber,
+          "ctutr"  -> testCtutr,
           "regime" -> testRegime
         )
         val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTRATION_FAILED",
-          "failures" -> Json.arr(testRegisterResponseFailureBody))
-          )
+          "registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> Json.arr(testRegisterResponseFailureBody))
+        )
         val result = post("/register-limited-company")(jsonBody)
         result.status mustBe OK
         result.json mustBe resultJson
@@ -71,14 +66,11 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
         val jsonBody =
           Json.obj(
-            "crn" -> testCompanyNumber,
-            "ctutr" -> testCtutr,
+            "crn"    -> testCompanyNumber,
+            "ctutr"  -> testCtutr,
             "regime" -> testRegime
           )
-        val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTERED",
-            "registeredBusinessPartnerId" -> testSafeId))
+        val resultJson = Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> testSafeId))
 
         val result = post("/register-registered-society")(jsonBody)
         result.status mustBe OK
@@ -92,16 +84,13 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         val jsonBody =
           Json.obj(
-            "crn" -> testCompanyNumber,
-            "ctutr" -> testCtutr,
+            "crn"    -> testCompanyNumber,
+            "ctutr"  -> testCtutr,
             "regime" -> testRegime
           )
 
-
         val resultJson = Json.obj(
-          "registration" -> Json.obj(
-            "registrationStatus" -> "REGISTRATION_FAILED",
-            "failures" -> Json.arr(testRegisterResponseFailureBody))
+          "registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> Json.arr(testRegisterResponseFailureBody))
         )
 
         val result = post("/register-registered-society")(jsonBody)

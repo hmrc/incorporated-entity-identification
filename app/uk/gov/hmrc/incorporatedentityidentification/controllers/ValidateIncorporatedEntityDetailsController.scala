@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,37 +16,42 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsMatched, DetailsMismatched, DetailsNotFound, IncorporatedEntityDetailsModel}
+import uk.gov.hmrc.incorporatedentityidentification.models._
 import uk.gov.hmrc.incorporatedentityidentification.services.ValidateIncorporatedEntityDetailsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
-import scala.concurrent.ExecutionContext
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ValidateIncorporatedEntityDetailsController @Inject()(cc: ControllerComponents,
-                                                            validateIncorporatedEntityDetailsService: ValidateIncorporatedEntityDetailsService,
-                                                            val authConnector: AuthConnector
-                                                           )(implicit ec: ExecutionContext) extends BackendController(cc) with AuthorisedFunctions {
+class ValidateIncorporatedEntityDetailsController @Inject() (cc: ControllerComponents,
+                                                             validateIncorporatedEntityDetailsService: ValidateIncorporatedEntityDetailsService,
+                                                             val authConnector: AuthConnector
+                                                            )(implicit ec: ExecutionContext)
+    extends BackendController(cc)
+    with AuthorisedFunctions {
 
-  def validateDetails(): Action[IncorporatedEntityDetailsModel] = Action.async(parse.json[IncorporatedEntityDetailsModel]) {
-    implicit request =>
-      authorised() {
-        validateIncorporatedEntityDetailsService.validateDetails(request.body.companyNumber, request.body.ctutr).map {
+  def validateDetails(): Action[IncorporatedEntityDetailsModel] = Action.async(parse.json[IncorporatedEntityDetailsModel]) { implicit request =>
+    authorised() {
+      validateIncorporatedEntityDetailsService
+        .validateDetails(request.body.companyNumber, request.body.ctutr)
+        .map {
           case DetailsMatched =>
             Ok(Json.obj("matched" -> true))
           case DetailsMismatched =>
             Ok(Json.obj("matched" -> false))
-          case DetailsNotFound =>
-            BadRequest(Json.obj(
-              "code" -> "NOT_FOUND",
-              "reason" -> "The back end has indicated that CT UTR cannot be returned")
-            )
+          case DetailsNotFound(message) =>
+            BadRequest(Json.obj("code" -> "NOT_FOUND", "reason" -> message))
+          case DetailsDownstreamError(message) =>
+            BadGateway(Json.obj("code" -> "BAD_GATEWAY", "reason" -> message))
         }
-      }
+        .recoverWith { case e =>
+          Future.apply(BadGateway(Json.obj("code" -> "INTERNAL_SERVER_ERROR", "reason" -> e.getMessage)))
+        }
+    }
   }
 
 }

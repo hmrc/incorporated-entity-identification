@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,14 @@ object TestConstants {
   val testRegisterCompanyJsonBody: JsObject = Json.obj(
     "company" ->
       Json.obj(
-        "crn" -> testCompanyNumber,
+        "crn"   -> testCompanyNumber,
         "ctutr" -> testCtutr
       )
   )
   val testRegisterRegisteredSocietyJsonBody: JsObject = Json.obj(
     "registeredSociety" ->
       Json.obj(
-        "crn" -> testCompanyNumber,
+        "crn"   -> testCompanyNumber,
         "ctutr" -> testCtutr
       )
   )
@@ -49,7 +49,7 @@ object TestConstants {
 
   val testRegisterResponseFailureBody: JsObject =
     Json.obj(
-      "code" -> testCode,
+      "code"   -> testCode,
       "reason" -> testReason
     )
 
@@ -57,11 +57,11 @@ object TestConstants {
     Json.obj(
       "failures" -> Json.arr(
         Json.obj(
-          "code" -> "INVALID_PAYLOAD",
+          "code"   -> "INVALID_PAYLOAD",
           "reason" -> "Request has not passed validation. Invalid payload."
         ),
         Json.obj(
-          "code" -> "INVALID_REGIME",
+          "code"   -> "INVALID_REGIME",
           "reason" -> "Request has not passed validation.  Invalid regime."
         )
       )

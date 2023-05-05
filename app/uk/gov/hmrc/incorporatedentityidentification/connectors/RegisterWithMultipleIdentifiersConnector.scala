@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,25 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
-import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersHttpParser._
+import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
-                                                         appConfig: AppConfig
-                                                        )(implicit ec: ExecutionContext) {
+class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
-  def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit
+    hc: HeaderCarrier
+  ): Future[RegisterWithMultipleIdentifiersResult] = {
 
     val jsonBody: JsObject =
       Json.obj(
         "company" ->
           Json.obj(
-            "crn" -> companyNumber,
+            "crn"   -> companyNumber,
             "ctutr" -> ctutr
           )
       )
@@ -47,24 +46,25 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
 
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
-      url = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
+      url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
-      body = jsonBody
+      body    = jsonBody
     )(
       implicitly[Writes[JsObject]],
       RegisterWithMultipleIdentifiersHttpReads,
       hc,
       ec
     )
-
   }
 
-  def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit hc: HeaderCarrier): Future[RegisterWithMultipleIdentifiersResult] = {
+  def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit
+    hc: HeaderCarrier
+  ): Future[RegisterWithMultipleIdentifiersResult] = {
     val jsonBody: JsObject =
       Json.obj(
         "registeredSociety" ->
           Json.obj(
-            "crn" -> companyNumber,
+            "crn"   -> companyNumber,
             "ctutr" -> ctutr
           )
       )
@@ -76,59 +76,14 @@ class RegisterWithMultipleIdentifiersConnector @Inject()(http: HttpClient,
     )
 
     http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
-      url = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
+      url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
-      body = jsonBody
+      body    = jsonBody
     )(
       implicitly[Writes[JsObject]],
       RegisterWithMultipleIdentifiersHttpReads,
       hc,
       ec
     )
-
   }
-
-}
-
-object RegisterWithMultipleIdentifiersHttpParser {
-
-  val IdentificationKey = "identification"
-  val IdentificationTypeKey = "idType"
-  val IdentificationValueKey = "idValue"
-  val SafeIdKey = "SAFEID"
-
-  implicit object RegisterWithMultipleIdentifiersHttpReads extends HttpReads[RegisterWithMultipleIdentifiersResult] {
-
-    override def read(method: String, url: String, response: HttpResponse): RegisterWithMultipleIdentifiersResult = {
-      response.status match {
-        case OK =>
-          (for {
-            idType <- (response.json \ IdentificationKey \ 0 \ IdentificationTypeKey).validate[String]
-            if idType == SafeIdKey
-            safeId <- (response.json \ IdentificationKey \ 0 \ IdentificationValueKey).validate[String]
-          } yield safeId) match {
-            case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
-            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
-          }
-        case _ => if (response.json.as[JsObject].keys.contains("failures")) {
-          (response.json \ "failures").validate[Array[Failures]] match {
-            case JsSuccess(failures, _) => RegisterWithMultipleIdentifiersFailure(response.status, failures)
-            case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}") }
-        } else {
-          response.json.validate[Failures] match {
-          case JsSuccess(failure, _) => RegisterWithMultipleIdentifiersFailure(response.status, Array(failure))
-          case _: JsError => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}") } }
-          }
-        }
-      }
-
-  sealed trait RegisterWithMultipleIdentifiersResult
-
-  case class RegisterWithMultipleIdentifiersSuccess(safeId: String) extends RegisterWithMultipleIdentifiersResult
-
-  case class RegisterWithMultipleIdentifiersFailure(status: Int, body: Array[Failures]) extends RegisterWithMultipleIdentifiersResult
-
-  case class Failures(code: String, reason: String)
-
-  implicit val format: OFormat[Failures] = Json.format[Failures]
 }
