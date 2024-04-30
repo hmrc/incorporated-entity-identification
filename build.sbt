@@ -1,15 +1,15 @@
-import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, integrationTestSettings}
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+import uk.gov.hmrc.DefaultBuildSettings
+
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
 
 val appName = "incorporated-entity-identification"
 
-val silencerVersion = "1.7.0"
+val silencerVersion = "1.7.16"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
   .settings(
-    majorVersion                     := 0,
-    scalaVersion                     := "2.12.12",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
     // ***************
     // Use the silencer plugin to suppress warnings
@@ -21,14 +21,11 @@ lazy val microservice = Project(appName, file("."))
     // ***************
     scalafmtOnCompile := true
   )
-  .settings(publishingSettings: _*)
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
   .settings(CodeCoverageSettings.settings: _*)
   .settings(resolvers += Resolver.jcenterRepo)
 
-IntegrationTest / Keys.fork := true
-IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory) (base => Seq(base / "it")).value
-IntegrationTest / javaOptions += "-Dlogger.resource=logback-test.xml"
-addTestReportOption(IntegrationTest, "int-test-reports")
-IntegrationTest / parallelExecution := false
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings())
+  .settings(libraryDependencies ++= AppDependencies.it)

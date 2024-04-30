@@ -5,10 +5,10 @@ This is an application to allow Limited Companies to provide their information t
 ### How to run the service
 
 1. Make sure any dependent services are running using the following service-manager command
-   `sm --start INCORPORATED_ENTITY_IDENTIFICATION_ALL`
+   `sm2 --start INCORPORATED_ENTITY_IDENTIFICATION_ALL`
 
 2. Stop the backend in service manager using
-   `sm --stop INCORPORATED_ENTITY_IDENTIFICATION`
+   `sm2 --stop INCORPORATED_ENTITY_IDENTIFICATION`
 
 3. Run the backend locally using
    `sbt 'run 9719 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
