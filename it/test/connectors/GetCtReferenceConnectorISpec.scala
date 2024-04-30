@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val result = await(connector.getCtReference(companyNumber))
 
       result.left.value mustBe a[BadGatewayException]
-      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object: {\"unknown\":true}),WrappedArray()))))"
+      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object. Available keys are 'unknown'),List()))))"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
 
