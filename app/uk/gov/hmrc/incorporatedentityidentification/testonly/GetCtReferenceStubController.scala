@@ -126,7 +126,7 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "78787885"   -> "2119102033",
     "31257555"   -> "1144440208",
     "31757555"   -> "2187647873",
-    "12575555"   -> "1113456543",
+    "12575555"   -> "1113456543"
   )
 
 }
