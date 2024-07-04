@@ -8,7 +8,7 @@ val appName = "incorporated-entity-identification"
 val silencerVersion = "1.7.16"
 
 lazy val microservice = Project(appName, file("."))
-  .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
     // ***************

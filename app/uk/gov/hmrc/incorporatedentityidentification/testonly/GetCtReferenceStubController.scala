@@ -49,8 +49,9 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     }
   }
 
-  // To be removed after E2E testing
-  val e2eTestData = Map(
+  lazy val e2eTestData: Map[String, String] = pillarTwoTestData ++ plasticTaxTestData
+
+  private val plasticTaxTestData: Map[String, String] = Map(
     "99999991" -> "1044814810",
     "99999992" -> "8851208889",
     "99999993" -> "2251904531",
@@ -109,4 +110,23 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "9870564"  -> "7127001773",
     "9870565"  -> "7161525510"
   )
+
+  private val pillarTwoTestData: Map[String, String] = Map(
+    "66778899"   -> "1004481479",
+    "88990011"   -> "8899001122",
+    "77442962"   -> "8800442962",
+    "77442946"   -> "6600442946",
+    "77431892"   -> "8800431892",
+    "77431891"   -> "8800431891",
+    "80431887"   -> "9100431887",
+    "77431880"   -> "8800431880",
+    "00034561"   -> "2203405620",
+    "12345610"   -> "1962476745",
+    "45582365"   -> "7144440039",
+    "78787885"   -> "2119102033",
+    "31257555"   -> "1144440208",
+    "31757555"   -> "2187647873",
+    "12575555"   -> "1113456543"
+  )
+
 }
