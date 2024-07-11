@@ -77,7 +77,7 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
     )
 
   // PPT Test Data
-  val e2eTestData = Map(
+  lazy private val plasticPackagingTaxData: Map[String, String] = Map(
     "2111234408" -> "XW0000100382303",
     "9111234409" -> "XA0000100382304",
     "1111234384" -> "XP0000100382278",
@@ -114,4 +114,24 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
     "9220316469" -> "XA0000100082579",
     "9177001494" -> "XP0000100415578"
   )
+
+  lazy private val pillar2Data: Map[String, String] = Map(
+    "1004481479" -> "XP0000100448147",
+    "8899001122" -> "X0000100448129",
+    "8800442962" -> "XY0000100442962",
+    "6600442946" -> "XY0000100442946",
+    "8800431892" -> "XX0000100431892",
+    "8800431891" -> "XH0000100431891",
+    "9100431887" -> "XL0000100431887",
+    "8800431880" -> "XE0000100431880",
+    "2203405620" -> "XW0000100294820",
+    "1962476745" -> "XL0000100294670",
+    "7144440039" -> "XZ0000100294535",
+    "2119102033" -> "XA0000100294368",
+    "1144440208" -> "XL0000100028993",
+    "2187647873" -> "XW0000100029017",
+    "1113456543" -> "XS0000100029021"
+  )
+
+  lazy private val e2eTestData: Map[String, String] = plasticPackagingTaxData ++ pillar2Data
 }
