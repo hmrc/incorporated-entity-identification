@@ -40,4 +40,6 @@ trait AuthStub extends WireMockMethods {
     "internalId" -> internalId
   )
 
+  def emptyAuthResponse(): JsObject = Json.obj()
+
 }

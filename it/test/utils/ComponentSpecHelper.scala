@@ -101,4 +101,6 @@ trait ComponentSpecHelper
   private def buildClient(path: String): WSRequest =
     ws.url(s"http://localhost:$port$baseUrl$path").withFollowRedirects(false)
 
+  def verifyPost(count: Int, uri: String, optBody: Option[String] = None): Unit = WiremockHelper.verifyPost(count, uri, optBody)
+
 }

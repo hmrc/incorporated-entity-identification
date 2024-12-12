@@ -17,10 +17,14 @@
 package services
 
 import org.mockito.scalatest.{IdiomaticMockito, ResetMocksAfterEachTest}
+import org.scalatest.Succeeded
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsObject, JsString, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationFail, BusinessVerificationPass, CompanyProfile}
+import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus._
+import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, JourneyIdGenerationService}
 
@@ -35,6 +39,280 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
   val testJourneyId = "testJourneyId"
   val testInternalId = "testInternalId"
+
+  val testCompanyName: String = "Test Company Ltd"
+  val testCompanyNumber: String = "01234567"
+  val testDateOfIncorporation: String = "2020-01-01"
+
+  val testAddressLine1: String = "testLine1"
+  val testAddressLine2: String = "test town"
+  val testCareOf: String = "test name"
+  val testCountry: String = "United Kingdom"
+  val testLocality: String = "test city"
+  val testPoBox: String = "123"
+  val testPostalCode: String = "AA11AA"
+  val testPremises: String = "1"
+  val testRegion: String = "test region"
+
+  val testCtUtr: String = "1234567890"
+
+  val testCompleteJourneyData: String =
+    s"""{
+      |"_id" : "$testJourneyId",
+      |"authInternalId" : "$testInternalId",
+      |"creationTimestamp" : "2024-12-05T11:09:11",
+      |"companyProfile" : {
+      |  "companyName" : "$testCompanyName",
+      |  "companyNumber" : "$testCompanyNumber",
+      |  "dateOfIncorporation" : "$testDateOfIncorporation",
+      |  "unsanitisedCHROAddress" :
+      |    { "address_line_1" : "$testAddressLine1",
+      |      "address_line_2" : "$testAddressLine2",
+      |      "care_of" : "$testCareOf",
+      |      "country" : "$testCountry",
+      |      "locality" : "$testLocality",
+      |      "po_box" : "$testPoBox",
+      |      "postal_code" : "$testPostalCode",
+      |      "premises" : "$testPremises",
+      |      "region" : "$testRegion"
+      |    }
+      |  },
+      |"ctutr" : "$testCtUtr",
+      | "identifiersMatch" : "DetailsMatched",
+      | "businessVerification" : {
+      |   "verificationStatus" : "$businessVerificationPassKey"
+      | },
+      |"registration" :
+      |  { "registrationStatus" : "REGISTERED",
+      |    "registeredBusinessPartnerId" : "X00000123456789"
+      |  }
+      |}""".stripMargin
+
+  val testFailedBusinessVerificationCompleteJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationFailKey"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testInvalidBusinessVerificationStatusJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "Invalid"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testInvalidCompanyProfileJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {},
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationPassKey"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testInvalidCtUtrJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : 1000,
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationPassKey"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testMissingBusinessVerificationStatusJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testMissingCompanyProfileJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationPassKey"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testMissingCtUtrJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "PASS"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "X00000123456789"
+       |  }
+       |}""".stripMargin
+
+  val testCompleteJourneyDataAsJsObject: JsObject = Json.parse(testCompleteJourneyData).as[JsObject]
+
+  val testFailedBusinessVerificationCompleteJourneyDataAsJsObject: JsObject =
+    Json.parse(testFailedBusinessVerificationCompleteJourneyData).as[JsObject]
+
+  val testInvalidBusinessVerificationStatusJourneyDataAsJsObject: JsObject =
+    Json.parse(testInvalidBusinessVerificationStatusJourneyData).as[JsObject]
+
+  val testInvalidCompanyProfileJourneyDataAsJsObject: JsObject =
+    Json.parse(testInvalidCompanyProfileJourneyData).as[JsObject]
+
+  val testInvalidCtUtrJourneyDataAsJsObject: JsObject =
+    Json.parse(testInvalidCtUtrJourneyData).as[JsObject]
+
+  val testMissingBusinessVerificationStatusJourneyDataAsJsObject: JsObject =
+    Json.parse(testMissingBusinessVerificationStatusJourneyData).as[JsObject]
+
+  val testMissingCompanyProfileJourneyDataAsJsObject: JsObject =
+    Json.parse(testMissingCompanyProfileJourneyData).as[JsObject]
+
+  val testMissingCtUtrJourneyDataAsJsObject: JsObject = Json.parse(testMissingCtUtrJourneyData).as[JsObject]
+
+  val expectedUnsanitisedCHROAddress: JsObject = Json.obj(
+    "address_line_1" -> testAddressLine1,
+    "address_line_2" -> testAddressLine2,
+    "care_of"        -> testCareOf,
+    "country"        -> testCountry,
+    "locality"       -> testLocality,
+    "po_box"         -> testPoBox,
+    "postal_code"    -> testPostalCode,
+    "premises"       -> testPremises,
+    "region"         -> testRegion
+  )
+
+  val expectedCompanyProfile: CompanyProfile =
+    CompanyProfile(testCompanyName, testCompanyNumber, Some(testDateOfIncorporation), expectedUnsanitisedCHROAddress)
 
   "createJourney" should {
     "call to store a new journey with the generated journey ID" in {
@@ -136,6 +414,130 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
       await(TestJourneyDataService.removeJourneyData(testJourneyId, testInternalId)) mustBe true
     }
+  }
+
+  "retrieveBusinessVerificationStatus" should {
+
+    "retrieve the business verification status from the journey data where the status is pass" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+
+      await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe Some(BusinessVerificationPass)
+    }
+
+    "retrieve the business verification status from the journey data where the status is fail" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testFailedBusinessVerificationCompleteJourneyDataAsJsObject)
+      )
+
+      await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe Some(BusinessVerificationFail)
+    }
+
+    "raise a DataAccessException if there is an error parsing the business verification status" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testInvalidBusinessVerificationStatusJourneyDataAsJsObject)
+      )
+
+      await(
+        TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId).failed.map { ex =>
+          ex mustBe a[DataAccessException]
+          ex.getMessage mustBe s"Error occurred parsing business verification status for journey $testJourneyId"
+        }
+      ) mustBe Succeeded
+
+    }
+
+    "return none if the journey data does not contain the business verification status" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testMissingBusinessVerificationStatusJourneyDataAsJsObject)
+      )
+
+      await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe None
+    }
+
+    "return none if the journey data is not found" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+
+      await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe None
+    }
+  }
+
+  "retrieveCompanyProfileAndCtUtr" should {
+
+    "return a company profile and Ct Utr when the journey data is fully defined" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+
+      val result: (Option[CompanyProfile], Option[String]) =
+        await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId))
+
+      result match {
+        case (Some(companyProfile: CompanyProfile), Some(ctUtr: String)) =>
+          companyProfile mustBe expectedCompanyProfile
+          ctUtr mustBe testCtUtr
+        case _ => fail("Call to retrieveCompanyProfileAndCtUtr should return company profile and Ct Utr")
+      }
+
+    }
+
+    "raise a DataAccessException if there is an error parsing the company profile" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testInvalidCompanyProfileJourneyDataAsJsObject)
+      )
+
+      await(
+        TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId).failed.map { ex =>
+          ex mustBe a[DataAccessException]
+          ex.getMessage mustBe s"Error occurred parsing company profile for journey $testJourneyId"
+        }
+      ) mustBe Succeeded
+
+    }
+
+    "return none for the company profile if the company profile is missing from the journey data" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testMissingCompanyProfileJourneyDataAsJsObject)
+      )
+
+      await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (None, Some(testCtUtr))
+
+    }
+
+    "raise a DataAccessException if there is an error parsing the Ct Utr" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testInvalidCtUtrJourneyDataAsJsObject))
+
+      await(
+        TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId).failed.map { ex =>
+          ex mustBe a[DataAccessException]
+          ex.getMessage mustBe s"Error occurred parsing Ct UTR for journey $testJourneyId"
+        }
+      ) mustBe Succeeded
+
+    }
+
+    "return none for the Ct Utr if the Ct Utr is missing from the journey data" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testMissingCtUtrJourneyDataAsJsObject))
+
+      await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (Some(expectedCompanyProfile), None)
+
+    }
+
+    "return None for both company profile and Ct Utr when the journey data is not found" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+
+      await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (None, None)
+
+    }
+
   }
 
 }

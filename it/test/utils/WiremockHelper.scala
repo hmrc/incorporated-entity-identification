@@ -29,13 +29,13 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   val wiremockPort: Int = 11111
   val wiremockHost: String = "localhost"
 
-  def verifyPost(uri: String, optBody: Option[String] = None): Unit = {
+  def verifyPost(count: Int, uri: String, optBody: Option[String] = None): Unit = {
     val uriMapping = postRequestedFor(urlEqualTo(uri))
     val postRequest = optBody match {
       case Some(body) => uriMapping.withRequestBody(equalTo(body))
       case None       => uriMapping
     }
-    verify(postRequest)
+    verify(count, postRequest)
   }
 
   def verifyGet(uri: String): Unit = {
