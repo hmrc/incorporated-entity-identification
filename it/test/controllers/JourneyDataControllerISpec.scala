@@ -50,10 +50,16 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         findById(testJourneyId, testInternalId).map(_.-(CreationTimestampKey)) mustBe
           Some(Json.obj(JourneyIdKey -> testJourneyId, AuthInternalIdKey -> testInternalId))
       }
-      "return Unauthorised" in {
+      "return Unauthorised for authentication failure" in {
         stubAuthFailure()
         val res = post("/journey")(Json.obj())
 
+        res.status mustBe UNAUTHORIZED
+      }
+      "return Unauthorised when internalId is not defined" in {
+        stubAuth(OK, emptyAuthResponse())
+
+        val res = post("/journey")(Json.obj())
         res.status mustBe UNAUTHORIZED
       }
     }
@@ -115,6 +121,14 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val res = get(s"/journey/$testJourneyId")
 
         res.status mustBe NOT_FOUND
+      }
+    }
+    "the response from auth does not include the internal id" should {
+      "return unauthorised" in {
+        stubAuth(OK, emptyAuthResponse())
+
+        val res = get(s"/journey/$testJourneyId")
+        res.status mustBe UNAUTHORIZED
       }
     }
   }
@@ -188,6 +202,15 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         res.status mustBe NOT_FOUND
       }
     }
+    "the response from auth does not include the internal id" should {
+      "return unauthorised" in {
+        stubAuth(OK, emptyAuthResponse())
+
+        val res = get(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe UNAUTHORIZED
+      }
+    }
 
   }
 
@@ -240,6 +263,15 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
 
         res.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+    "the response from auth does not include the internal id" should {
+      "return unauthorized" in {
+        stubAuth(OK, emptyAuthResponse())
+
+        val res = put(s"/journey/$testJourneyId/$testDataKey")(testDataValue)
+
+        res.status mustBe UNAUTHORIZED
       }
     }
   }
@@ -304,6 +336,17 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
         res.status mustBe UNAUTHORIZED
       }
     }
+    "the response from auth does not contain an internal id" should {
+      "return Unauthorized" in {
+        stubAuth(OK, emptyAuthResponse())
+
+        val testDataKey = "testDataKey"
+
+        val res = delete(s"/journey/$testJourneyId/$testDataKey")
+
+        res.status mustBe UNAUTHORIZED
+      }
+    }
   }
 
   "DELETE /journey/:journeyId" when {
@@ -341,6 +384,15 @@ class JourneyDataControllerISpec extends ComponentSpecHelper with CustomMatchers
     "the user cannot be authorised" should {
       "return Unauthorised" in {
         stubAuthFailure()
+
+        val res = delete(s"/journey/$testJourneyId")
+
+        res.status mustBe UNAUTHORIZED
+      }
+    }
+    "the response from auth does not include an internal id" should {
+      "return Unauthorized" in {
+        stubAuth(OK, emptyAuthResponse())
 
         val res = delete(s"/journey/$testJourneyId")
 

@@ -29,6 +29,7 @@ object TestConstants {
   val testRegime = "VATC"
   val testInternalId: String = UUID.randomUUID().toString
   val testSafeId: String = UUID.randomUUID().toString
+
   val testRegisterCompanyJsonBody: JsObject = Json.obj(
     "company" ->
       Json.obj(
@@ -36,6 +37,7 @@ object TestConstants {
         "ctutr" -> testCtutr
       )
   )
+
   val testRegisterRegisteredSocietyJsonBody: JsObject = Json.obj(
     "registeredSociety" ->
       Json.obj(
@@ -43,6 +45,8 @@ object TestConstants {
         "ctutr" -> testCtutr
       )
   )
+
+  val registrationSuccess = Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> testSafeId))
 
   val testCode: String = "INVALID_PAYLOAD"
   val testReason: String = "Request has not passed validation. Invalid payload."

@@ -16,7 +16,11 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.services
 
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue}
+import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationStatus, CompanyProfile}
+import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus.reads
+import uk.gov.hmrc.incorporatedentityidentification.models.CompanyProfile.format
+import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 
 import javax.inject.{Inject, Singleton}
@@ -53,6 +57,48 @@ class JourneyDataService @Inject() (incorporatedEntityIdentificationRepository: 
 
   def removeJourneyData(journeyId: String, authInternalId: String): Future[Boolean] = {
     incorporatedEntityIdentificationRepository.removeJourneyData(journeyId, authInternalId)
+  }
+
+  def retrieveBusinessVerificationStatus(journeyId: String, authInternalId: String): Future[Option[BusinessVerificationStatus]] = {
+
+    getJourneyData(journeyId, authInternalId).map {
+      case Some(json) =>
+        if (json.keys.contains("businessVerification")) {
+          (json \ "businessVerification").validate[BusinessVerificationStatus] match {
+            case JsSuccess(businessVerificationStatus, _) => Some(businessVerificationStatus)
+            case _: JsError => throw DataAccessException(s"Error occurred parsing business verification status for journey $journeyId")
+          }
+        } else None
+      case None => None
+    }
+
+  }
+
+  def retrieveCompanyProfileAndCtUtr(journeyId: String, authInternalId: String): Future[(Option[CompanyProfile], Option[String])] = {
+
+    getJourneyData(journeyId, authInternalId).map {
+      case Some(json) => {
+        val optCompanyProfile: Option[CompanyProfile] =
+          if (json.keys.contains("companyProfile")) {
+            (json \ "companyProfile").validate[CompanyProfile] match {
+              case JsSuccess(companyProfile, _) => Some(companyProfile)
+              case _: JsError                   => throw DataAccessException(s"Error occurred parsing company profile for journey $journeyId")
+            }
+          } else None
+
+        val optCtUtr: Option[String] =
+          if (json.keys.contains("ctutr")) {
+            (json \ "ctutr").validate[String] match {
+              case JsSuccess(ctUtr, _) => Some(ctUtr)
+              case _: JsError          => throw DataAccessException(s"Error occurred parsing Ct UTR for journey $journeyId")
+            }
+          } else None
+
+        (optCompanyProfile, optCtUtr)
+      }
+      case None => (None, None)
+    }
+
   }
 
 }
