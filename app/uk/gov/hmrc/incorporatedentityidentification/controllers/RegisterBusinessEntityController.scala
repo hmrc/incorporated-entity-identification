@@ -44,23 +44,12 @@ class RegisterBusinessEntityController @Inject() (cc: ControllerComponents,
 
     authorised().retrieve(internalId) {
       case Some(internalId) =>
-        val regime = (request.body \ "regime").as[String]
-
-        val optCrn: Option[String] = (request.body \ "crn").asOpt[String]
-        val optCtutr: Option[String] = (request.body \ "ctutr").asOpt[String]
-
         val optJourneyId: Option[String] = (request.body \ "journeyId").asOpt[String]
         val optBusinessVerificationCheck: Option[Boolean] = (request.body \ "businessVerificationCheck").asOpt[Boolean]
+        val optRegime = (request.body \ "regime").asOpt[String]
 
-        (optCrn, optCtutr, optJourneyId, optBusinessVerificationCheck) match {
-          case (Some(crn), Some(ctUtr), None, None) =>
-            registerWithMultipleIdentifiersService.registerLimitedCompany(crn, ctUtr, regime).map {
-              case RegisterWithMultipleIdentifiersSuccess(safeId) =>
-                Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> safeId)))
-              case RegisterWithMultipleIdentifiersFailure(_, body) =>
-                Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> body)))
-            }
-          case (None, None, Some(journeyId), Some(businessVerificationCheck)) =>
+        (optJourneyId, optBusinessVerificationCheck, optRegime) match {
+          case (Some(journeyId), Some(businessVerificationCheck), Some(regime)) =>
             register(journeyId, internalId, businessVerificationCheck, regime, registerWithMultipleIdentifiersService.registerLimitedCompany)
           case _ => Future.successful(BadRequest("Invalid parameter list"))
         }
@@ -72,23 +61,12 @@ class RegisterBusinessEntityController @Inject() (cc: ControllerComponents,
 
     authorised().retrieve(internalId) {
       case Some(internalId) =>
-        val regime = (request.body \ "regime").as[String]
-
-        val optCrn: Option[String] = (request.body \ "crn").asOpt[String]
-        val optCtutr: Option[String] = (request.body \ "ctutr").asOpt[String]
-
         val optJourneyId: Option[String] = (request.body \ "journeyId").asOpt[String]
         val optBusinessVerificationCheck: Option[Boolean] = (request.body \ "businessVerificationCheck").asOpt[Boolean]
+        val optRegime = (request.body \ "regime").asOpt[String]
 
-        (optCrn, optCtutr, optJourneyId, optBusinessVerificationCheck) match {
-          case (Some(crn), Some(ctUtr), None, None) =>
-            registerWithMultipleIdentifiersService.registerRegisteredSociety(crn, ctUtr, regime).map {
-              case RegisterWithMultipleIdentifiersSuccess(safeId) =>
-                Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> safeId)))
-              case RegisterWithMultipleIdentifiersFailure(_, body) =>
-                Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> body)))
-            }
-          case (None, None, Some(journeyId), Some(businessVerificationCheck)) =>
+        (optJourneyId, optBusinessVerificationCheck, optRegime) match {
+          case (Some(journeyId), Some(businessVerificationCheck), Some(regime)) =>
             register(journeyId, internalId, businessVerificationCheck, regime, registerWithMultipleIdentifiersService.registerRegisteredSociety)
           case _ => Future.successful(BadRequest("Invalid parameter list"))
         }
