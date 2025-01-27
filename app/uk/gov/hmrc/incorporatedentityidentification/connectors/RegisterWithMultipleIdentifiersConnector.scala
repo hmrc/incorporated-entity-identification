@@ -19,7 +19,8 @@ package uk.gov.hmrc.incorporatedentityidentification.connectors
 import play.api.libs.json._
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.{RegisterWithMultipleIdentifiersHttpReads, RegisterWithMultipleIdentifiersResult}
+import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersHttpReads
+import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +29,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appC
 
   def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit
     hc: HeaderCarrier
-  ): Future[RegisterWithMultipleIdentifiersResult] = {
+  ): Future[RegistrationStatus] = {
 
     val jsonBody: JsObject =
       Json.obj(
@@ -45,7 +46,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appC
       "Content-Type" -> "application/json"
     )
 
-    http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
+    http.POST[JsObject, RegistrationStatus](
       url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
       body    = jsonBody
@@ -59,7 +60,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appC
 
   def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit
     hc: HeaderCarrier
-  ): Future[RegisterWithMultipleIdentifiersResult] = {
+  ): Future[RegistrationStatus] = {
     val jsonBody: JsObject =
       Json.obj(
         "registeredSociety" ->
@@ -75,7 +76,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appC
       "Content-Type" -> "application/json"
     )
 
-    http.POST[JsObject, RegisterWithMultipleIdentifiersResult](
+    http.POST[JsObject, RegistrationStatus](
       url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
       headers = extraHeaders,
       body    = jsonBody

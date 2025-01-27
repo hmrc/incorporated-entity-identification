@@ -17,8 +17,11 @@
 package uk.gov.hmrc.incorporatedentityidentification.httpparsers
 
 import play.api.http.Status.OK
-import play.api.libs.json.{JsError, JsObject, JsSuccess, Json, OFormat}
+import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
+
+import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationStatus}
+import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.RegistrationFailuresFormat
 
 object RegisterWithMultipleIdentifiersHttpParser {
 
@@ -27,9 +30,9 @@ object RegisterWithMultipleIdentifiersHttpParser {
   val IdentificationValueKey = "idValue"
   val SafeIdKey = "SAFEID"
 
-  implicit object RegisterWithMultipleIdentifiersHttpReads extends HttpReads[RegisterWithMultipleIdentifiersResult] {
+  implicit object RegisterWithMultipleIdentifiersHttpReads extends HttpReads[RegistrationStatus] {
 
-    override def read(method: String, url: String, response: HttpResponse): RegisterWithMultipleIdentifiersResult = {
+    override def read(method: String, url: String, response: HttpResponse): RegistrationStatus = {
       response.status match {
         case OK =>
           (for {
@@ -37,18 +40,18 @@ object RegisterWithMultipleIdentifiersHttpParser {
             if idType == SafeIdKey
             safeId <- (response.json \ IdentificationKey \ 0 \ IdentificationValueKey).validate[String]
           } yield safeId) match {
-            case JsSuccess(safeId, _) => RegisterWithMultipleIdentifiersSuccess(safeId)
+            case JsSuccess(safeId, _) => Registered(safeId)
             case _: JsError           => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
           }
         case _ =>
           if (response.json.as[JsObject].keys.contains("failures")) {
-            (response.json \ "failures").validate[Array[Failures]] match {
-              case JsSuccess(failures, _) => RegisterWithMultipleIdentifiersFailure(response.status, failures)
+            (response.json \ "failures").validate[Array[Failure]] match {
+              case JsSuccess(failures, _) => RegistrationFailed(Some(failures))
               case _: JsError             => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
             }
           } else {
-            response.json.validate[Failures] match {
-              case JsSuccess(failure, _) => RegisterWithMultipleIdentifiersFailure(response.status, Array(failure))
+            response.json.validate[Failure] match {
+              case JsSuccess(failure, _) => RegistrationFailed(Some(Array(failure)))
               case _: JsError            => throw new InternalServerException(s"Invalid JSON returned on Register API: ${response.body}")
             }
           }
@@ -56,13 +59,4 @@ object RegisterWithMultipleIdentifiersHttpParser {
     }
   }
 
-  sealed trait RegisterWithMultipleIdentifiersResult
-
-  case class RegisterWithMultipleIdentifiersSuccess(safeId: String) extends RegisterWithMultipleIdentifiersResult
-
-  case class RegisterWithMultipleIdentifiersFailure(status: Int, body: Array[Failures]) extends RegisterWithMultipleIdentifiersResult
-
-  case class Failures(code: String, reason: String)
-
-  implicit val format: OFormat[Failures] = Json.format[Failures]
 }

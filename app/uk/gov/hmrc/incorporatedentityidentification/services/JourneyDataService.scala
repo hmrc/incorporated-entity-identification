@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.services
 
-import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue}
-import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationStatus, CompanyProfile}
+import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue, Json}
+import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationStatus, CompanyProfile, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus.reads
-import uk.gov.hmrc.incorporatedentityidentification.models.CompanyProfile.format
+import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.format
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 
+import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -101,4 +102,52 @@ class JourneyDataService @Inject() (incorporatedEntityIdentificationRepository: 
 
   }
 
+  def updateRegistrationTimestamp(journeyId: String, authInternalId: String, registrationTimestamp: Instant): Future[Boolean] =
+    updateJourneyData(journeyId, "registrationTimestamp", Json.obj("$date" -> registrationTimestamp.toEpochMilli), authInternalId)
+
+  def updateRegistrationStatus(journeyId: String, authInternalId: String, registrationStatus: RegistrationStatus): Future[Boolean] =
+    updateJourneyData(journeyId, "registration", Json.toJson(registrationStatus), authInternalId)
+
+  def retrieveRegistrationStatusAndTimestamp(journeyId: String, authInternalId: String): Future[(Option[RegistrationStatus], Option[Instant])] = {
+
+    getJourneyData(journeyId, authInternalId).map {
+      case Some(journeyData) => (parseRegistrationStatus(journeyId, journeyData), parseRegistrationTimestamp(journeyId, journeyData))
+      case None              => (None, None)
+    }
+
+  }
+
+  def retrieveRegistrationStatus(journeyId: String, authInternalId: String): Future[Option[RegistrationStatus]] =
+    getJourneyData(journeyId, authInternalId).map {
+      case Some(journeyData) => parseRegistrationStatus(journeyId, journeyData)
+      case None              => None
+    }
+
+  def retrieveRegistrationTimestamp(journeyId: String, authInternalId: String): Future[Option[Instant]] =
+    getJourneyData(journeyId, authInternalId).map {
+      case Some(journeyData) => parseRegistrationTimestamp(journeyId, journeyData)
+      case None              => None
+    }
+
+  private def parseRegistrationStatus(journeyId: String, journeyData: JsObject): Option[RegistrationStatus] = {
+
+    if (journeyData.keys.contains("registration")) {
+      (journeyData \ "registration").validate[RegistrationStatus] match {
+        case JsSuccess(registrationStatus, _) => Some(registrationStatus)
+        case _: JsError => throw DataAccessException(s"[VER-5038] Error occurred parsing registration status for journey $journeyId")
+      }
+    } else None
+
+  }
+
+  private def parseRegistrationTimestamp(journeyId: String, journeyData: JsObject): Option[Instant] = {
+
+    if (journeyData.keys.contains("registrationTimestamp")) {
+      (journeyData \ "registrationTimestamp" \ """$date""" \ """$numberLong""").validate[String] match {
+        case JsSuccess(registrationTimestamp, _) => Some(Instant.ofEpochMilli(registrationTimestamp.toLong))
+        case _: JsError => throw DataAccessException(s"[VER-5038] Error occurred parsing registration timestamp for journey $journeyId")
+      }
+    } else None
+
+  }
 }

@@ -19,6 +19,8 @@ package utils
 import play.api.libs.json.{JsObject, Json}
 import assets.TestConstants._
 
+import java.time.Instant
+
 object JourneyDataHelper {
 
   private val companyProfile: JsObject = Json.obj(
@@ -72,5 +74,15 @@ object JourneyDataHelper {
 
     coreJourneyObj ++ companyProfileObj ++ businessVerificationStatusObj ++ ctUtrObj
   }
+
+  def getRegistrationTimestamp(timestamp: Instant): JsObject =
+    Json.obj("registrationTimestamp" -> Json.obj("$date" -> timestamp.toEpochMilli))
+
+  def getSuccessfulRegistrationStatus(registeredBusinessPartnerId: String): JsObject =
+    Json.obj("registration" -> Json.obj(
+      "registrationStatus" -> "REGISTERED",
+      "registeredBusinessPartnerId" -> registeredBusinessPartnerId
+      )
+    )
 
 }

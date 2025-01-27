@@ -26,6 +26,9 @@ import play.api.libs.json.Writes
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
 import play.api.test.Helpers._
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 trait ComponentSpecHelper
     extends AnyWordSpec
     with Matchers
@@ -52,7 +55,9 @@ trait ComponentSpecHelper
     "microservice.services.base.host"                   -> mockHost,
     "microservice.services.base.port"                   -> mockPort,
     "microservice.services.des.stub-url"                -> s"$mockUrl/stubbed-url",
-    "microservice.services.des.url"                     -> mockUrl
+    "microservice.services.des.url"                     -> mockUrl,
+    "registration.retry.timeout"                        -> "2000",
+    "registration.retry.interval"                       -> "200"
   )
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
@@ -81,6 +86,15 @@ trait ComponentSpecHelper
       buildClient(uri)
         .withHttpHeaders("Content-Type" -> "application/json", "Authorization" -> "Bearer123")
         .post(writes.writes(body).toString())
+    )
+  }
+
+  def post[T](uri: String, duration: Duration)(body: T)(implicit writes: Writes[T]): WSResponse = {
+    Await.result(
+      buildClient(uri)
+        .withHttpHeaders("Content-Type" -> "application/json", "Authorization" -> "Bearer123")
+        .post(writes.writes(body).toString()),
+      duration
     )
   }
 

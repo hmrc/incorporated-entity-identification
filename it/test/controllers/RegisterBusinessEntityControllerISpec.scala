@@ -23,7 +23,13 @@ import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationS
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import utils.{ComponentSpecHelper, JourneyDataHelper, JourneyDataMongoHelper}
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+
 class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with AuthStub with JourneyDataMongoHelper with RegisterWithMultipleIdentifiersStub {
+
+  val ec: ExecutionContext = ExecutionContext.global
 
   "POST /register-limited-company for VER-5018" should {
 
@@ -235,6 +241,17 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.status mustBe UNAUTHORIZED
       }
 
+      "the response from auth does not contain an internal identifier" in {
+
+        stubAuth(OK, emptyAuthResponse())
+
+        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+        val result = post("/register-limited-company")(jsonBody)
+
+        result.status mustBe UNAUTHORIZED
+      }
+
     }
 
     "return Bad request" when {
@@ -402,6 +419,17 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
       }
 
+      "the response from auth does not contain an internal identifier" in {
+
+        stubAuth(OK, emptyAuthResponse())
+
+        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+        val result = post("/register-registered-society")(jsonBody)
+
+        result.status mustBe UNAUTHORIZED
+      }
+
     }
 
     "return Bad request" when {
@@ -422,12 +450,192 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
   }
 
+  "VER-5038 Registration submission retry mechanism" should {
+
+    "return registration status from journey data when registration has been completed within registration timeout" in {
+
+      val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+        testJourneyId,
+        testInternalId,
+        withCompanyData = true,
+        Some(businessVerificationPassKey),
+        Some(testCtutr)
+      )
+
+      val now: Instant = OffsetDateTime.now(ZoneOffset.UTC).toInstant
+
+      val registrationTimestamp: Instant = Instant.ofEpochMilli(now.toEpochMilli - 1000)
+
+      val testJourneyDataWithRegistrationStatusAndTimeout: JsObject = testJourneyData ++
+        JourneyDataHelper.getRegistrationTimestamp(registrationTimestamp) ++
+        JourneyDataHelper.getSuccessfulRegistrationStatus(testSafeId)
+
+      insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatusAndTimeout)
+
+      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+      val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+      val result = post("/register-registered-society")(jsonBody)
+
+      result.status mustBe OK
+      result.json mustBe registrationSuccess
+
+      verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+
+    }
+
+    "resubmit registration when registration has been completed but the timeout has expired" in {
+
+      val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+        testJourneyId,
+        testInternalId,
+        withCompanyData = true,
+        Some(businessVerificationPassKey),
+        Some(testCtutr)
+      )
+
+      val now: Instant = OffsetDateTime.now(ZoneOffset.UTC).toInstant
+
+      val registrationTimestamp: Instant = Instant.ofEpochMilli(now.toEpochMilli - 3000)
+
+      val testJourneyDataWithRegistrationStatusAndTimeout: JsObject = testJourneyData ++
+        JourneyDataHelper.getRegistrationTimestamp(registrationTimestamp) ++
+        JourneyDataHelper.getSuccessfulRegistrationStatus(testSafeId)
+
+      insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatusAndTimeout)
+
+      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
+
+      val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+      val result = post("/register-registered-society")(jsonBody)
+
+      result.status mustBe OK
+      result.json mustBe registrationSuccess
+
+      verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+    }
+
+    "return registration data when registration completes during timeout using retry mechanism" in {
+
+      val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+        testJourneyId,
+        testInternalId,
+        withCompanyData = true,
+        Some(businessVerificationPassKey),
+        Some(testCtutr)
+      )
+
+      val now: Instant = OffsetDateTime.now(ZoneOffset.UTC).toInstant
+
+      val registrationTimestamp: Instant = Instant.ofEpochMilli(now.toEpochMilli - 500)
+
+      val testJourneyDataWithRegistrationTimeout: JsObject = testJourneyData ++
+        JourneyDataHelper.getRegistrationTimestamp(registrationTimestamp)
+
+      insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationTimeout)
+
+      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+      val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+      delayedRegistration(testJourneyId, testInternalId, testSafeId, 1000)(ec)
+
+      val result =  post("/register-limited-company", 2500.millis)(jsonBody)
+
+      result.status mustBe OK
+      result.json mustBe registrationSuccess
+
+      verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+
+    }
+
+    "resubmit when registration does not complete in the timeout using retry mechanism" in {
+
+      val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+        testJourneyId,
+        testInternalId,
+        withCompanyData = true,
+        Some(businessVerificationPassKey),
+        Some(testCtutr)
+      )
+
+      val now: Instant = OffsetDateTime.now(ZoneOffset.UTC).toInstant
+
+      val registrationTimestamp: Instant = Instant.ofEpochMilli(now.toEpochMilli - 100)
+
+      val testJourneyDataWithRegistrationTimeout: JsObject = testJourneyData ++
+        JourneyDataHelper.getRegistrationTimestamp(registrationTimestamp)
+
+      insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationTimeout)
+
+      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
+
+      val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+      val result =  post("/register-registered-society", 2500.millis)(jsonBody)
+
+      result.status mustBe OK
+      result.json mustBe registrationSuccess
+
+      verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+
+    }
+
+
+    "return INTERNAL_SERVER_ERROR" when {
+
+      "the journey data is in an illegal state" in {
+
+        val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+          testJourneyId,
+          testInternalId,
+          withCompanyData = true,
+          Some(businessVerificationPassKey),
+          Some(testCtutr)
+        )
+
+        val testJourneyDataWithRegistrationStatus: JsObject = testJourneyData ++ JourneyDataHelper.getSuccessfulRegistrationStatus(testSafeId)
+
+        insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatus)
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+        val result = post("/register-limited-company")(jsonBody)
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+        result.body mustBe "[VER-5038] Registration status is defined but, registration timeout is not"
+
+        verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+      }
+
+    }
+
+  }
+
   private def createJsonBody(journeyId: String, businessVerificationCheck: Boolean, regime: String): JsObject = {
 
     Json.obj(
       "journeyId" -> journeyId,
       "businessVerificationCheck" -> businessVerificationCheck,
       "regime" -> regime
+    )
+
+  }
+
+  private def delayedRegistration(journeyId: String, authInternalId: String, safeId: String, delay: Long)(implicit ec: ExecutionContext): Future[Unit] = Future {
+
+    Thread.sleep(delay)
+
+    updateById(journeyId, authInternalId, "registration", Json.obj(
+      "registrationStatus" -> "REGISTERED",
+      "registeredBusinessPartnerId" -> safeId
+      )
     )
 
   }

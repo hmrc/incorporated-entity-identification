@@ -21,11 +21,10 @@ import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.incorporatedentityidentification.models._
+import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationFailed}
+import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.RegistrationFailuresFormat
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, RegisterWithMultipleIdentifiersService}
-import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersResult
-import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersSuccess
-import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersFailure
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -78,7 +77,7 @@ class RegisterBusinessEntityController @Inject() (cc: ControllerComponents,
                        authInternalId: String,
                        businessVerificationCheck: Boolean,
                        regime: String,
-                       registrationFunction: (String, String, String) => Future[RegisterWithMultipleIdentifiersResult]
+                       registrationFunction: (String, String, String) => Future[RegistrationStatus]
                       ): Future[Result] = {
     (for {
       shouldRegister <- journeyDataService.retrieveBusinessVerificationStatus(journeyId, authInternalId).map {
@@ -96,23 +95,37 @@ class RegisterBusinessEntityController @Inject() (cc: ControllerComponents,
                   (optCompanyProfile, optCtUtr) <- journeyDataService.retrieveCompanyProfileAndCtUtr(journeyId, authInternalId)
                   result <- (optCompanyProfile, optCtUtr) match {
                               case (Some(companyProfile), Some(ctUtr)) =>
-                                registrationFunction(companyProfile.companyNumber, ctUtr, regime).map {
-                                  case RegisterWithMultipleIdentifiersSuccess(safeId) =>
-                                    Ok(
-                                      Json.obj(
-                                        "registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> safeId)
+                                registerWithMultipleIdentifiersService
+                                  .register(journeyId, authInternalId, companyProfile.companyNumber, ctUtr, regime, registrationFunction)
+                                  .map {
+                                    case Registered(safeId) =>
+                                      Ok(
+                                        Json.obj(
+                                          "registration" -> Json.obj("registrationStatus" -> "REGISTERED", "registeredBusinessPartnerId" -> safeId)
+                                        )
                                       )
-                                    )
-                                  case RegisterWithMultipleIdentifiersFailure(_, body) =>
-                                    Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> body)))
-                                }
+                                    case RegistrationFailed(registrationFailures) =>
+                                      registrationFailures match {
+                                        case Some(body) =>
+                                          Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> body)))
+                                        case None =>
+                                          Ok(
+                                            Json.obj(
+                                              "registration" -> Json.obj("registrationStatus" -> "REGISTRATION_FAILED", "failures" -> Json.obj())
+                                            )
+                                          )
+                                      }
+                                    case RegistrationNotCalled =>
+                                      throw new IllegalStateException(s"Unexpected registration not called result returned in journey $journeyId")
+                                  }
                               case _ => throw DataAccessException(s"Missing required data for registration in database for journey $journeyId")
                             }
                 } yield result
                 else
                   Future.successful(Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_NOT_CALLED"))))
-    } yield result).recover { case dataAccessException: DataAccessException =>
-      InternalServerError(dataAccessException.msg)
+    } yield result).recover {
+      case dataAccessException: DataAccessException     => InternalServerError(dataAccessException.msg)
+      case illegalStateException: IllegalStateException => InternalServerError(illegalStateException.getMessage)
     }
   }
 }
