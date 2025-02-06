@@ -16,10 +16,12 @@
 
 package utils
 
+import org.mongodb.scala.model._
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.test.Helpers.{await, _}
+import uk.gov.hmrc.mongo.play.json.Codecs
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 
@@ -42,6 +44,22 @@ trait JourneyDataMongoHelper extends BeforeAndAfterEach {
         .toFuture()
         .map(_ => ())
     )
+
+  def updateById(journeyId: String, authInternalId: String, dataKey: String, data: JsValue): Unit = {
+    await(
+      repo.collection.updateOne(
+        Filters.and(
+          Filters.equal("_id", journeyId),
+          Filters.equal("authInternalId", authInternalId)
+        ),
+        Updates.set(dataKey, Codecs.toBson(data)),
+        UpdateOptions().upsert(false)
+      ).toFuture().map(_ => ())
+    )
+
+  }
+
+  def drop(): Unit = await(repo.drop)
 
   override def beforeEach(): Unit = {
     await(repo.drop)

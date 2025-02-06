@@ -16,13 +16,15 @@
 
 package services
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
+
 import org.mockito.scalatest.{IdiomaticMockito, ResetMocksAfterEachTest}
 import org.scalatest.Succeeded
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsObject, JsString, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationFail, BusinessVerificationPass, CompanyProfile}
+import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationFail, BusinessVerificationPass, CompanyProfile, Registered, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus._
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
@@ -53,8 +55,13 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
   val testPostalCode: String = "AA11AA"
   val testPremises: String = "1"
   val testRegion: String = "test region"
+  val testSafeId: String = "X00000123456789"
 
   val testCtUtr: String = "1234567890"
+
+  val now: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+
+  val timestampInMillis: Instant = Instant.ofEpochMilli(now.toInstant.toEpochMilli)
 
   val testCompleteJourneyData: String =
     s"""{
@@ -84,7 +91,7 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
       | },
       |"registration" :
       |  { "registrationStatus" : "REGISTERED",
-      |    "registeredBusinessPartnerId" : "X00000123456789"
+      |    "registeredBusinessPartnerId" : "$testSafeId"
       |  }
       |}""".stripMargin
 
@@ -277,6 +284,71 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
        |  }
        |}""".stripMargin
 
+  val testMissingRegistrationStatusJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationPassKey"
+       | }
+       |}""".stripMargin
+
+  val testInvalidRegistrationStatusJourneyData: String =
+    s"""{
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationPassKey"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "INVALID"
+       |  }
+       |}""".stripMargin
+
+  val registrationTimestampAsJsObject: JsObject =
+    Json.obj("registrationTimestamp" -> Json.obj("$date" -> Json.obj("$numberLong" -> timestampInMillis.toEpochMilli.toString)))
+
+  val invalidRegistrationTimestampAsJsObject: JsObject =
+    Json.obj("registrationTimestamp" -> Json.obj("$date" -> Json.obj("$numberLong" -> timestampInMillis.toEpochMilli)))
+
   val testCompleteJourneyDataAsJsObject: JsObject = Json.parse(testCompleteJourneyData).as[JsObject]
 
   val testFailedBusinessVerificationCompleteJourneyDataAsJsObject: JsObject =
@@ -299,6 +371,10 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
   val testMissingCtUtrJourneyDataAsJsObject: JsObject = Json.parse(testMissingCtUtrJourneyData).as[JsObject]
 
+  val testMissingRegistrationStatusJourneyDataAsJsObject: JsObject = Json.parse(testMissingRegistrationStatusJourneyData).as[JsObject]
+
+  val testInvalidRegistrationStatusJourneyDataAsJsObject: JsObject = Json.parse(testInvalidRegistrationStatusJourneyData).as[JsObject]
+
   val expectedUnsanitisedCHROAddress: JsObject = Json.obj(
     "address_line_1" -> testAddressLine1,
     "address_line_2" -> testAddressLine2,
@@ -313,6 +389,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
   val expectedCompanyProfile: CompanyProfile =
     CompanyProfile(testCompanyName, testCompanyNumber, Some(testDateOfIncorporation), expectedUnsanitisedCHROAddress)
+
+  val expectedRegistrationStatus: Registered = Registered(testSafeId)
 
   "createJourney" should {
     "call to store a new journey with the generated journey ID" in {
@@ -536,6 +614,174 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
       await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (None, None)
 
+    }
+
+  }
+
+  "retrieveRegistrationStatusAndTimestamp" should {
+
+    "return a registration status and timestamp when the journey data is fully defined and contains a registration timestamp" in {
+
+      val testJourneyData: JsObject = testCompleteJourneyDataAsJsObject ++ registrationTimestampAsJsObject
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+
+      val result: (Option[RegistrationStatus], Option[Instant]) =
+        await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
+
+      result match {
+        case (Some(registrationStatus: RegistrationStatus), Some(registrationTimestamp: Instant)) =>
+          registrationStatus mustBe Registered(testSafeId)
+          registrationTimestamp mustBe timestampInMillis
+        case _ => fail("Call to retrieveRegistrationStatusandTimestamp should return registration status and timestamp")
+      }
+
+    }
+
+    "return the registration status only for complete journey data" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+
+      val result: (Option[RegistrationStatus], Option[Instant]) =
+        await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
+
+      result match {
+        case (Some(registrationStatus: RegistrationStatus), None) => registrationStatus mustBe Registered(testSafeId)
+        case _ => fail(s"Unexpected result. Call should have returned registration status only. Actual result is $result")
+      }
+
+    }
+
+    "return the registration timestamp only for an incomplete journey with a registration timestamp" in {
+
+      val testJourneyData: JsObject = testMissingRegistrationStatusJourneyDataAsJsObject ++ registrationTimestampAsJsObject
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+
+      val result: (Option[RegistrationStatus], Option[Instant]) =
+        await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
+
+      result match {
+        case (None, Some(registrationTimestamp: Instant)) => registrationTimestamp mustBe timestampInMillis
+        case _ => fail(s"Unexpected result. Call should have returned registration timestamp only. Actual result is $result")
+      }
+
+    }
+
+    "return neither registration status nor timestamp if they are missing from the journey data" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testMissingRegistrationStatusJourneyDataAsJsObject)
+      )
+
+      val result: (Option[RegistrationStatus], Option[Instant]) =
+        await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
+
+      result match {
+        case (None, None) => succeed
+        case _            => fail(s"Unexpected result. Call should have returned neither registration status nor timestamp. Actual result is $result")
+      }
+
+    }
+
+    "raise a DataAccessException if the registration status is invalid" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testInvalidRegistrationStatusJourneyDataAsJsObject)
+      )
+
+      await(
+        TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId).failed.map { ex =>
+          ex mustBe a[DataAccessException]
+          ex.getMessage mustBe s"[VER-5038] Error occurred parsing registration status for journey $testJourneyId"
+        }
+      ) mustBe Succeeded
+
+    }
+
+    "raise a DataAccessException if the registration timestamp is invalid" in {
+
+      val testJourneyData: JsObject = testCompleteJourneyDataAsJsObject ++ invalidRegistrationTimestampAsJsObject
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+
+      await(
+        TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId).failed.map { ex =>
+          ex mustBe a[DataAccessException]
+          ex.getMessage mustBe s"[VER-5038] Error occurred parsing registration timestamp for journey $testJourneyId"
+        }
+      )
+
+    }
+
+    "return none for both registration status and timestamp when the journey data is not found" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+
+      await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId)) mustBe (None, None)
+    }
+
+  }
+
+  "retrieveRegistrationTimestamp" should {
+
+    "return the registration timestamp when it is present in the journey data" in {
+
+      val testJourneyData: JsObject = testCompleteJourneyDataAsJsObject ++ registrationTimestampAsJsObject
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+
+      val result: Option[Instant] = await(TestJourneyDataService.retrieveRegistrationTimestamp(testJourneyId, testInternalId))
+
+      result match {
+        case Some(registrationTimestamp) => registrationTimestamp mustBe timestampInMillis
+        case _                           => fail("Call should have returned the registration timestamp")
+      }
+
+    }
+
+    "return none when the journey data is not found" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future(None)
+
+      await(TestJourneyDataService.retrieveRegistrationTimestamp(testJourneyId, testInternalId)) mustBe None
+    }
+  }
+
+  "retrieveRegistrationStatus" should {
+
+    "return the registration timestamp when it is present in the journey" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+
+      val result: Option[RegistrationStatus] = await(TestJourneyDataService.retrieveRegistrationStatus(testJourneyId, testInternalId))
+
+      result match {
+        case Some(registrationStatus: RegistrationStatus) => registrationStatus mustBe Registered(testSafeId)
+        case None                                         => fail("Call should have returned registration status")
+      }
+    }
+
+    "return none when the journey data does not contain the registration status" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
+        Some(testMissingRegistrationStatusJourneyDataAsJsObject)
+      )
+
+      val result: Option[RegistrationStatus] = await(TestJourneyDataService.retrieveRegistrationStatus(testJourneyId, testInternalId))
+
+      result match {
+        case Some(_) => fail("Call should not have returned a registration status")
+        case None    => succeed
+      }
+
+    }
+
+    "return none when the journey data is not found" in {
+
+      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+
+      await(TestJourneyDataService.retrieveRegistrationStatus(testJourneyId, testInternalId)) mustBe None
     }
 
   }

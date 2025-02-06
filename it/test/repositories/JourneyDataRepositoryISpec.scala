@@ -16,6 +16,7 @@
 
 package repositories
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import java.util.UUID
 
 import assets.TestConstants.{testInternalId, testJourneyId}
@@ -63,7 +64,22 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
       await(repo.updateJourneyData(testJourneyId, testKey, JsString(updatedData), testInternalId))
       await(repo.getJourneyData(testJourneyId, testInternalId)).map(json => (json \ testKey).as[String]) mustBe Some(updatedData)
     }
+    "successfully insert a timestamp for the start of a registration call to ETMP" in {
+      await(repo.createJourney(testJourneyId, testInternalId))
+
+      val now: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+
+      val timestamp: Instant = Instant.ofEpochMilli(now.toInstant.toEpochMilli)
+
+      await(repo.updateJourneyData(testJourneyId, "registrationTimestamp", Json.obj("$date" -> timestamp.toEpochMilli), testInternalId))
+
+      val registrationTimestamp = await(repo.getJourneyData(testJourneyId, testInternalId)).map(
+        json => (json \ "registrationTimestamp" \ """$date""" \ """$numberLong""").as[String])
+
+      registrationTimestamp.map(ts => Instant.ofEpochMilli(ts.toLong)) mustBe Some(timestamp)
+    }
   }
+
   "removeJourneyDataField" should {
     "successfully remove a field" in {
       await(repo.createJourney(testJourneyId, testInternalId))

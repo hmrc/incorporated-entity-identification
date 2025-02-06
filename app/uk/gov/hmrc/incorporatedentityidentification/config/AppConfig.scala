@@ -49,4 +49,13 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   lazy val timeToLiveSeconds: Long = servicesConfig.getString("mongodb.timeToLiveSeconds").toLong
 
+  lazy val registrationTimeout: Long = servicesConfig.getString("registration.retry.timeout").toLong
+
+  def determineRetryInterval(): Long = {
+
+    val retryIntervalFromConfig: Long = servicesConfig.getString("registration.retry.interval").toLong
+
+    if (retryIntervalFromConfig < registrationTimeout) retryIntervalFromConfig else registrationTimeout / 10
+  }
+
 }

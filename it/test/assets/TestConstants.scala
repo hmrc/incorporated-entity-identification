@@ -30,6 +30,11 @@ object TestConstants {
   val testInternalId: String = UUID.randomUUID().toString
   val testSafeId: String = UUID.randomUUID().toString
 
+  val testInvalidPayloadCode: String = "INVALID_PAYLOAD"
+  val testInvalidPayloadReason: String = "Request has not passed validation. Invalid payload."
+  val testInvalidRegimeCode: String = "INVALID_REGIME"
+  val testInvalidRegimePayload: String = "Request has not passed validation. Invalid Regime."
+
   val testRegisterCompanyJsonBody: JsObject = Json.obj(
     "company" ->
       Json.obj(

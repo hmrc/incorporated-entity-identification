@@ -18,13 +18,12 @@ package connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
-import play.api.http.Status.BAD_REQUEST
 import play.api.test.Helpers._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
-import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.{Failures, RegisterWithMultipleIdentifiersFailure, RegisterWithMultipleIdentifiersSuccess}
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{DesStub, FeatureSwitching}
+import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed}
 import utils.ComponentSpecHelper
 
 import java.util.UUID
@@ -59,7 +58,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec
 
         val result = connector.registerLimitedCompany(companyNumber, ctutr, regime)
 
-        await(result) mustBe RegisterWithMultipleIdentifiersSuccess(safeId)
+        await(result) mustBe Registered(safeId)
         wireMockServer.verify(
           postRequestedFor(urlPathEqualTo("/cross-regime/register/GRS"))
             .withQueryParam("grsRegime", equalTo(regime))
@@ -98,7 +97,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec
           val result = connector.registerLimitedCompany(companyNumber, ctutr, regime)
           disable(DesStub)
 
-          await(result) mustBe RegisterWithMultipleIdentifiersSuccess(safeId)
+          await(result) mustBe Registered(safeId)
           wireMockServer.verify(
             postRequestedFor(urlPathEqualTo("/stubbed-url/cross-regime/register/GRS"))
               .withQueryParam("grsRegime", equalTo(regime))
@@ -137,9 +136,10 @@ class RegisterWithMultipleIdentifiersConnectorISpec
         val result = connector.registerLimitedCompany(companyNumber, ctutr, regime)
 
         await(result) match {
-          case RegisterWithMultipleIdentifiersFailure(status, failures) =>
-            status mustBe BAD_REQUEST
-            failures.head mustBe Failures("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload.")
+          case RegistrationFailed(optFailures) => optFailures match {
+            case Some(failures) => failures.head mustBe Failure("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload.")
+            case None => fail("Failed registration should contain details of a single failure")
+        }
           case _ => fail("test returned an invalid registration result")
         }
         wireMockServer.verify(
@@ -184,12 +184,13 @@ class RegisterWithMultipleIdentifiersConnectorISpec
         val result = connector.registerLimitedCompany(companyNumber, ctutr, regime)
 
         await(result) match {
-          case RegisterWithMultipleIdentifiersFailure(status, failures) =>
-            status mustBe BAD_REQUEST
-            failures mustBe Array(
-              Failures("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload."),
-              Failures("INVALID_REGIME", "Request has not passed validation.  Invalid regime.")
-            )
+          case RegistrationFailed(optFailures) => optFailures match {
+            case Some(failures) => failures mustBe Array (
+                Failure ("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload."),
+                Failure ("INVALID_REGIME", "Request has not passed validation.  Invalid regime.")
+              )
+            case None => fail("Failed registration should contain details of two failure cases")
+          }
           case _ => fail("test returned an invalid registration result")
         }
         wireMockServer.verify(
@@ -229,7 +230,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec
 
         val result = connector.registerRegisteredSociety(companyNumber, ctutr, regime)
 
-        await(result) mustBe RegisterWithMultipleIdentifiersSuccess(safeId)
+        await(result) mustBe Registered(safeId)
         wireMockServer.verify(
           postRequestedFor(urlPathEqualTo("/cross-regime/register/GRS"))
             .withQueryParam("grsRegime", equalTo(regime))
@@ -268,7 +269,7 @@ class RegisterWithMultipleIdentifiersConnectorISpec
           val result = connector.registerRegisteredSociety(companyNumber, ctutr, regime)
           disable(DesStub)
 
-          await(result) mustBe RegisterWithMultipleIdentifiersSuccess(safeId)
+          await(result) mustBe Registered(safeId)
           wireMockServer.verify(
             postRequestedFor(urlPathEqualTo("/stubbed-url/cross-regime/register/GRS"))
               .withQueryParam("grsRegime", equalTo(regime))
@@ -307,9 +308,10 @@ class RegisterWithMultipleIdentifiersConnectorISpec
         val result = connector.registerRegisteredSociety(companyNumber, ctutr, regime)
 
         await(result) match {
-          case RegisterWithMultipleIdentifiersFailure(status, failures) =>
-            status mustBe BAD_REQUEST
-            failures.head mustBe Failures("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload.")
+          case RegistrationFailed(optFailures) => optFailures match {
+            case Some(failures) => failures.head mustBe Failure ("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload.")
+            case None => fail("Failed registration should contain details of a single failure")
+          }
           case _ => fail("test returned an invalid registration result")
         }
         wireMockServer.verify(
@@ -353,12 +355,13 @@ class RegisterWithMultipleIdentifiersConnectorISpec
 
         val result = connector.registerRegisteredSociety(companyNumber, ctutr, regime)
         await(result) match {
-          case RegisterWithMultipleIdentifiersFailure(status, failures) =>
-            status mustBe BAD_REQUEST
-            failures mustBe Array(
-              Failures("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload."),
-              Failures("INVALID_REGIME", "Request has not passed validation.  Invalid regime.")
+          case RegistrationFailed(optFailures) => optFailures match {
+            case Some(failures) => failures mustBe Array (
+              Failure ("INVALID_PAYLOAD", "Request has not passed validation. Invalid payload."),
+              Failure ("INVALID_REGIME", "Request has not passed validation.  Invalid regime.")
             )
+            case None => fail("Failed registration should contain details of two failure cases")
+          }
           case _ => fail("test returned an invalid registration result")
         }
         wireMockServer.verify(
