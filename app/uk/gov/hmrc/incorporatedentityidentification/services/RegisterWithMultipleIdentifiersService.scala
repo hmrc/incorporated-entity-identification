@@ -22,7 +22,7 @@ import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus
+import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationFailed, RegistrationNotCalled, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.models.error.{IllegalRegistrationStateError, IncorporatedEntityIdentificationError, RegistrationSubmissionRetryTimedOutError}
 
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
@@ -71,9 +71,18 @@ class RegisterWithMultipleIdentifiersService @Inject() (actorSystem: ActorSystem
                                                          registrationTimestamp,
                                                          registrationFunction
                                                         )
-      case (Some(_), None) =>
-        logger.error(s"[VER-5038] Unexpected state for journey $journeyId. Registration status is defined, but registration timestamp is not")
-        Future.failed(new IllegalStateException("[VER-5038] Registration status is defined but, registration timeout is not"))
+      case (Some(registrationStatus), None) =>
+        // Submit for all registration statuses during introductory period. After the update has been running for a few
+        // days we can restrict submission to instances of registration not called only.
+        val status: String = registrationStatus match {
+          case Registered(_)         => "success"
+          case RegistrationFailed(_) => "failed"
+          case RegistrationNotCalled => "not called"
+        }
+
+        logger.warn(s"""[VER-5038] Registration status of "$status", but no timestamp for journey $journeyId""")
+
+        handleInitialSubmission(journeyId, authInternalId, companyNumber, ctutr, regime, registrationFunction)
       case (Some(registrationStatus), Some(registrationTimestamp)) =>
         handleRepeatSubmissionAfterRegistrationComplete(journeyId,
                                                         authInternalId,

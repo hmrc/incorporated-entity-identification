@@ -18,6 +18,8 @@ package utils
 
 import play.api.libs.json.{JsObject, Json}
 import assets.TestConstants._
+import uk.gov.hmrc.incorporatedentityidentification.models.Failure
+import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.RegistrationFailuresFormat
 
 import java.time.Instant
 
@@ -82,6 +84,19 @@ object JourneyDataHelper {
     Json.obj("registration" -> Json.obj(
       "registrationStatus" -> "REGISTERED",
       "registeredBusinessPartnerId" -> registeredBusinessPartnerId
+      )
+    )
+
+  def getFailedRegistrationStatus(code: String, reason: String): JsObject =
+    Json.obj("registration" -> Json.obj(
+      "registrationStatus" -> "REGISTRATION_FAILED",
+        "failures" -> Json.toJson(Array(Failure(code, reason)))
+      )
+    )
+
+  def getRegistrationNotCalledStatus: JsObject =
+    Json.obj( "registration" -> Json.obj(
+      "registrationStatus" -> "REGISTRATION_NOT_CALLED"
       )
     )
 
