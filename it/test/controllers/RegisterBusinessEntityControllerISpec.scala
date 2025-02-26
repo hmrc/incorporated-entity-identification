@@ -588,61 +588,6 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
     "submit a registration after previously failing matching" when {
 
-      // The tests for status's of success and failed are only valid for the introductory period of this release
-      "there is a registration status of registered but no timestamp" in {
-
-        val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
-          testJourneyId,
-          testInternalId,
-          withCompanyData = true,
-          Some(businessVerificationPassKey),
-          Some(testCtutr)
-        )
-
-        val testJourneyDataWithRegistrationStatus: JsObject = testJourneyData ++ JourneyDataHelper.getSuccessfulRegistrationStatus(testSafeId)
-
-        insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatus)
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
-
-        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
-
-        val result = post("/register-registered-society")(jsonBody)
-
-        result.status mustBe OK
-        result.json mustBe registrationSuccess
-
-        verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
-      }
-
-      "there is a failed registration but no timestamp" in {
-
-        val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
-          testJourneyId,
-          testInternalId,
-          withCompanyData = true,
-          Some(businessVerificationPassKey),
-          Some(testCtutr)
-        )
-
-        val testJourneyDataWithRegistrationStatus: JsObject = testJourneyData ++ JourneyDataHelper.getFailedRegistrationStatus(testInvalidPayloadCode, testInvalidPayloadReason)
-
-        insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatus)
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        stubRegisterWithMultipleIdentifiersSuccess(testRegisterRegisteredSocietyJsonBody, testRegime)(OK, testSafeId)
-
-        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
-
-        val result = post("/register-registered-society")(jsonBody)
-
-        result.status mustBe OK
-        result.json mustBe registrationSuccess
-
-        verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
-      }
-
       "there is a registration status of registration not called, but no timestamp" in {
 
         val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
@@ -668,6 +613,62 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.json mustBe registrationSuccess
 
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+      }
+
+    }
+
+    "return INTERNAL_SERVER_ERROR" when {
+
+      "the journey data is in an illegal state with a successful registration but no timestamp" in {
+
+        val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+          testJourneyId,
+          testInternalId,
+          withCompanyData = true,
+          Some(businessVerificationPassKey),
+          Some(testCtutr)
+        )
+
+        val testJourneyDataWithRegistrationStatus: JsObject = testJourneyData ++ JourneyDataHelper.getSuccessfulRegistrationStatus(testSafeId)
+
+        insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatus)
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+        val result = post("/register-limited-company")(jsonBody)
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+        result.body mustBe "[VER-5038] Registration status is defined as success, but registration timeout is not defined"
+
+        verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
+      }
+
+      "the journey data is in an illegal state with a failed registration but no timestamp" in {
+
+        val testJourneyData: JsObject = JourneyDataHelper.getJourneyDataForRegistration(
+          testJourneyId,
+          testInternalId,
+          withCompanyData = true,
+          Some(businessVerificationPassKey),
+          Some(testCtutr)
+        )
+
+        val testJourneyDataWithRegistrationStatus: JsObject = testJourneyData ++ JourneyDataHelper.getFailedRegistrationStatus(testInvalidPayloadCode, testInvalidPayloadReason)
+
+        insertById(testJourneyId, testInternalId, testJourneyDataWithRegistrationStatus)
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        val jsonBody: JsObject = createJsonBody(testJourneyId, businessVerificationCheck = true, testRegime)
+
+        val result = post("/register-limited-company")(jsonBody)
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+        result.body mustBe "[VER-5038] Registration status is defined as failed, but registration timeout is not defined"
+
+        verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
 
     }

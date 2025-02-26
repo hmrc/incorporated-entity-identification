@@ -22,7 +22,7 @@ import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationFailed, RegistrationNotCalled, RegistrationStatus}
+import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationNotCalled, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.models.error.{IllegalRegistrationStateError, IncorporatedEntityIdentificationError, RegistrationSubmissionRetryTimedOutError}
 
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
@@ -72,17 +72,14 @@ class RegisterWithMultipleIdentifiersService @Inject() (actorSystem: ActorSystem
                                                          registrationFunction
                                                         )
       case (Some(registrationStatus), None) =>
-        // Submit for all registration statuses during introductory period. After the update has been running for a few
-        // days we can restrict submission to instances of registration not called only.
-        val status: String = registrationStatus match {
-          case Registered(_)         => "success"
-          case RegistrationFailed(_) => "failed"
-          case RegistrationNotCalled => "not called"
+        registrationStatus match {
+          case RegistrationNotCalled => handleInitialSubmission(journeyId, authInternalId, companyNumber, ctutr, regime, registrationFunction)
+          case other: RegistrationStatus =>
+            val status: String = if (other.isInstanceOf[Registered]) "success" else "failed"
+            logger.error(s"""[VER-5038] Registration status of "$status", but no timestamp for journey $journeyId""")
+            Future
+              .failed(new IllegalStateException(s"[VER-5038] Registration status is defined as $status, but registration timeout is not defined"))
         }
-
-        logger.warn(s"""[VER-5038] Registration status of "$status", but no timestamp for journey $journeyId""")
-
-        handleInitialSubmission(journeyId, authInternalId, companyNumber, ctutr, regime, registrationFunction)
       case (Some(registrationStatus), Some(registrationTimestamp)) =>
         handleRepeatSubmissionAfterRegistrationComplete(journeyId,
                                                         authInternalId,

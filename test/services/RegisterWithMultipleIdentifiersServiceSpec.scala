@@ -246,10 +246,7 @@ class RegisterWithMultipleIdentifiersServiceSpec
       }
     }
 
-    "submit a registration after a previous matching failure in the journey" when {
-
-      // Note, these tests will only be valid for the first few days of the release. Eventually, the
-      // only registration status expected when the timestamp is absent will be registration not called.
+    "raise an error when" when {
 
       "the registration status is defined as success, but the timestamp is not defined" in new Setup {
 
@@ -257,18 +254,23 @@ class RegisterWithMultipleIdentifiersServiceSpec
           .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
           .returns(Future.successful((Some(Registered(testSafeId)), None)))
 
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
+        val result: Either[Exception, RegistrationStatus] =
+          try {
+            Right(
+              await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
+            )
+          } catch {
+            case ex: Exception => Left(ex)
+          }
 
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
+        result match {
+          case Right(_) => fail("Call to method register should have raised an exception")
+          case Left(ex) =>
+            ex.isInstanceOf[IllegalStateException] mustBe true
+            ex.getMessage mustBe s"[VER-5038] Registration status is defined as success, but registration timeout is not defined"
+        }
 
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
-
-        val result: RegistrationStatus =
-          await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
-
-        result mustBe Registered(testSafeId)
+        verify(mockJourneyDataService, times(1)).retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
       }
 
       "the registration status is defined as failed, but the timestamp is not defined" in new Setup {
@@ -277,18 +279,23 @@ class RegisterWithMultipleIdentifiersServiceSpec
           .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
           .returns(Future.successful((Some(RegistrationFailed(Some(failures))), None)))
 
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
+        val result: Either[Exception, RegistrationStatus] =
+          try {
+            Right(
+              await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
+            )
+          } catch {
+            case ex: Exception => Left(ex)
+          }
 
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
+        result match {
+          case Right(_) => fail("Call to method register should have raised an exception")
+          case Left(ex) =>
+            ex.isInstanceOf[IllegalStateException] mustBe true
+            ex.getMessage mustBe s"[VER-5038] Registration status is defined as failed, but registration timeout is not defined"
+        }
 
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
-
-        val result: RegistrationStatus =
-          await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
-
-        result mustBe Registered(testSafeId)
+        verify(mockJourneyDataService, times(1)).retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
       }
 
     }
