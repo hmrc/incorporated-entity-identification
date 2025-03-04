@@ -19,13 +19,16 @@ package utils
 import org.mongodb.scala.model._
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue, Json}
 import play.api.test.Helpers.{await, _}
 import uk.gov.hmrc.mongo.play.json.Codecs
+import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus
+import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait JourneyDataMongoHelper extends BeforeAndAfterEach {
   self: GuiceOneServerPerSuite with Suite =>
@@ -59,10 +62,27 @@ trait JourneyDataMongoHelper extends BeforeAndAfterEach {
 
   }
 
+  def retrieveRegistrationStatus(journeyId: String, authInternalId: String): Option[RegistrationStatus] =
+    findById(journeyId, authInternalId) match {
+      case Some(journeyData) => parseRegistrationStatus(journeyId, journeyData)
+      case None              => None
+    }
+
   def drop(): Unit = await(repo.drop)
 
   override def beforeEach(): Unit = {
     await(repo.drop)
     super.beforeEach()
+  }
+
+  private def parseRegistrationStatus(journeyId: String, journeyData: JsObject): Option[RegistrationStatus] = {
+
+    if (journeyData.keys.contains("registration")) {
+      (journeyData \ "registration").validate[RegistrationStatus] match {
+        case JsSuccess(registrationStatus, _) => Some(registrationStatus)
+        case _: JsError => throw DataAccessException(s"[VER-5038] Error occurred parsing registration status for journey $journeyId")
+      }
+    } else None
+
   }
 }

@@ -121,8 +121,11 @@ class RegisterBusinessEntityController @Inject() (cc: ControllerComponents,
                               case _ => throw DataAccessException(s"Missing required data for registration in database for journey $journeyId")
                             }
                 } yield result
-                else
-                  Future.successful(Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_NOT_CALLED"))))
+                else {
+                  journeyDataService.updateRegistrationStatus(journeyId, authInternalId, RegistrationNotCalled).map { _ =>
+                    Ok(Json.obj("registration" -> Json.obj("registrationStatus" -> "REGISTRATION_NOT_CALLED")))
+                  }
+                }
     } yield result).recover {
       case dataAccessException: DataAccessException     => InternalServerError(dataAccessException.msg)
       case illegalStateException: IllegalStateException => InternalServerError(illegalStateException.getMessage)
