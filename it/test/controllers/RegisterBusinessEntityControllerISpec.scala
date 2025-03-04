@@ -19,6 +19,7 @@ package controllers
 import assets.TestConstants._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
+import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationNotCalled}
 import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus._
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
 import utils.{ComponentSpecHelper, JourneyDataHelper, JourneyDataMongoHelper}
@@ -56,6 +57,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.status mustBe OK
         result.json mustBe registrationSuccess
 
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
+
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
 
@@ -79,6 +82,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         result.status mustBe OK
         result.json mustBe registrationSuccess
+
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
 
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
@@ -104,6 +109,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         result.status mustBe OK
         result.json mustBe registrationSuccess
+
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
 
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
@@ -136,6 +143,16 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.status mustBe OK
         result.json mustBe resultJson
 
+        retrieveRegistrationStatus(testJourneyId, testInternalId) match {
+          case Some(registrationStatus) => registrationStatus match {
+            case registrationFailed: RegistrationFailed =>
+              registrationFailed.registrationFailures.size mustBe 1
+              registrationFailed.registrationFailures.head mustBe Array(Failure(testCode, testReason))
+            case _ => fail("Unexpected registration status retrieved")
+          }
+          case None => fail("Registration status not found")
+        }
+
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
 
@@ -167,6 +184,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.status mustBe OK
         result.json mustBe resultJson
 
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(RegistrationNotCalled)
+
         verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
 
@@ -193,6 +212,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         result.status mustBe OK
         result.json mustBe resultJson
+
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(RegistrationNotCalled)
 
         verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
 
@@ -221,6 +242,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         result.status mustBe OK
         result.json mustBe resultJson
+
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(RegistrationNotCalled)
 
         verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
 
@@ -370,6 +393,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         result.status mustBe OK
         result.json mustBe registrationSuccess
 
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
+
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
 
@@ -400,6 +425,16 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
         val result = post("/register-registered-society")(jsonBody)
         result.status mustBe OK
         result.json mustBe resultJson
+
+        retrieveRegistrationStatus(testJourneyId, testInternalId) match {
+          case Some(registrationStatus) => registrationStatus match {
+            case registrationFailed: RegistrationFailed =>
+              registrationFailed.registrationFailures.size mustBe 1
+              registrationFailed.registrationFailures.head mustBe Array(Failure(testCode, testReason))
+            case _ => fail("Unexpected registration status retrieved")
+          }
+          case None => fail("Registration status not found")
+        }
 
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
@@ -481,6 +516,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
       result.status mustBe OK
       result.json mustBe registrationSuccess
 
+      retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
+
       verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
 
     }
@@ -515,6 +552,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
       result.status mustBe OK
       result.json mustBe registrationSuccess
 
+      retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
+
       verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
     }
 
@@ -547,6 +586,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
       result.status mustBe OK
       result.json mustBe registrationSuccess
+
+      retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
 
       verifyPost(0, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
 
@@ -581,6 +622,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
       result.status mustBe OK
       result.json mustBe registrationSuccess
 
+      retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
+
       verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
 
     }
@@ -611,6 +654,8 @@ class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with Aut
 
         result.status mustBe OK
         result.json mustBe registrationSuccess
+
+        retrieveRegistrationStatus(testJourneyId, testInternalId) mustBe Some(Registered(testSafeId))
 
         verifyPost(1, s"""/cross-regime/register/GRS?grsRegime=$testRegime""")
       }
