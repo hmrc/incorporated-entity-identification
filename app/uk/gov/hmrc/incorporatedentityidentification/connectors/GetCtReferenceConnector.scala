@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
-import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpException}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, StringContextOps}
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.httpparsers.GetCtReferenceHttpParser.GetCtReferenceHttpReads
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class GetCtReferenceConnector @Inject() (http: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class GetCtReferenceConnector @Inject() (http: HttpClientV2, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def getCtReference(companyNumber: String)(implicit hc: HeaderCarrier): Future[Either[HttpException, String]] = {
     val extraHeaders = Seq(
@@ -32,6 +33,6 @@ class GetCtReferenceConnector @Inject() (http: HttpClient, appConfig: AppConfig)
       appConfig.desEnvironmentHeader
     )
 
-    http.GET[Either[HttpException, String]](appConfig.getCtReferenceUrl(companyNumber), headers = extraHeaders)
+    http.get(url"${appConfig.getCtReferenceUrl(companyNumber)}").setHeader(extraHeaders: _*).execute[Either[HttpException, String]]
   }
 }
