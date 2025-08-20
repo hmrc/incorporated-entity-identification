@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
 import play.api.libs.json._
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.httpparsers.RegisterWithMultipleIdentifiersHttpParser.RegisterWithMultipleIdentifiersHttpReads
 import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus
@@ -25,7 +26,7 @@ import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClientV2, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def registerLimitedCompany(companyNumber: String, ctutr: String, regime: String)(implicit
     hc: HeaderCarrier
@@ -46,16 +47,11 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appC
       "Content-Type" -> "application/json"
     )
 
-    http.POST[JsObject, RegistrationStatus](
-      url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
-      headers = extraHeaders,
-      body    = jsonBody
-    )(
-      implicitly[Writes[JsObject]],
-      RegisterWithMultipleIdentifiersHttpReads,
-      hc,
-      ec
-    )
+    http
+      .post(url"${appConfig.getRegisterWithMultipleIdentifiersUrl(regime)}")
+      .setHeader(extraHeaders: _*)
+      .withBody(Json.toJson(jsonBody))
+      .execute[RegistrationStatus]
   }
 
   def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit
@@ -76,15 +72,10 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClient, appC
       "Content-Type" -> "application/json"
     )
 
-    http.POST[JsObject, RegistrationStatus](
-      url     = appConfig.getRegisterWithMultipleIdentifiersUrl(regime),
-      headers = extraHeaders,
-      body    = jsonBody
-    )(
-      implicitly[Writes[JsObject]],
-      RegisterWithMultipleIdentifiersHttpReads,
-      hc,
-      ec
-    )
+    http
+      .post(url"${appConfig.getRegisterWithMultipleIdentifiersUrl(regime)}")
+      .setHeader(extraHeaders: _*)
+      .withBody(Json.toJson(jsonBody))
+      .execute[RegistrationStatus]
   }
 }
