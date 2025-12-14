@@ -17,9 +17,9 @@
 package connectors
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock._
-import org.scalatest.EitherValues._
-import play.api.test.Helpers._
+import com.github.tomakehurst.wiremock.client.WireMock.*
+import org.scalatest.EitherValues.*
+import play.api.test.Helpers.*
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitching, StubGetCtReference}
@@ -79,7 +79,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       val result = await(connector.getCtReference(companyNumber))
 
       result.left.value mustBe a[BadGatewayException]
-      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object. Available keys are 'unknown'),List()))))"
+      result.left.value.message mustBe "HoD returned a malformed JSON on GET <http://localhost:11111/corporation-tax/identifiers/crn/001> errors: List((,List(JsonValidationError(List('CTUTR' is undefined on object. Available keys are 'unknown'),ArraySeq()))))"
       wireMockServer.verify(getRequestedFor(urlPathEqualTo(s"/corporation-tax/identifiers/crn/$companyNumber")))
     }
 
@@ -89,7 +89,7 @@ class GetCtReferenceConnectorISpec extends ComponentSpecHelper with FeatureSwitc
       wireMockServer.stubFor(
         WireMock
           .get(urlPathMatching(s"/corporation-tax/identifiers/crn/.*"))
-          .willReturn(okJson("<html></html>"))
+          .willReturn(ok("<html></html>"))
       )
 
       val result = await(connector.getCtReference(companyNumber))

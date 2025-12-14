@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.connectors
 
-import play.api.libs.json._
+import play.api.libs.json.*
+import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, StringContextOps}
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
@@ -41,17 +42,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClientV2, ap
           )
       )
 
-    val extraHeaders = Seq(
-      "Authorization" -> appConfig.desAuthorisationToken,
-      appConfig.desEnvironmentHeader,
-      "Content-Type" -> "application/json"
-    )
-
-    http
-      .post(url"${appConfig.getRegisterWithMultipleIdentifiersUrl(regime)}")
-      .setHeader(extraHeaders: _*)
-      .withBody(Json.toJson(jsonBody))
-      .execute[RegistrationStatus]
+    postWithDESHeaders(regime, jsonBody)
   }
 
   def registerRegisteredSociety(companyNumber: String, ctutr: String, regime: String)(implicit
@@ -66,6 +57,12 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClientV2, ap
           )
       )
 
+    postWithDESHeaders(regime, jsonBody)
+
+  }
+
+  private def postWithDESHeaders(regime: String, jsonBody: JsObject)(implicit hc: HeaderCarrier) = {
+
     val extraHeaders = Seq(
       "Authorization" -> appConfig.desAuthorisationToken,
       appConfig.desEnvironmentHeader,
@@ -74,7 +71,7 @@ class RegisterWithMultipleIdentifiersConnector @Inject() (http: HttpClientV2, ap
 
     http
       .post(url"${appConfig.getRegisterWithMultipleIdentifiersUrl(regime)}")
-      .setHeader(extraHeaders: _*)
+      .setHeader(extraHeaders*)
       .withBody(Json.toJson(jsonBody))
       .execute[RegistrationStatus]
   }

@@ -16,9 +16,10 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.featureswitch.api.services
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{FeatureSwitchRegistry, FeatureSwitching}
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.models.FeatureSwitchSetting
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class FeatureSwitchService @Inject() (featureSwitchRegistry: FeatureSwitchRegistry) extends FeatureSwitching {

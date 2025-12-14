@@ -16,15 +16,15 @@
 
 package controllers
 
-import assets.TestConstants._
+import assets.TestConstants.*
 import play.api.Application
 import play.api.http.Status.CREATED
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, Json}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import stubs.{AuthStub, FakeJourneyIdGenerationService}
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.*
 import uk.gov.hmrc.incorporatedentityidentification.services.JourneyIdGenerationService
 import utils.{ComponentSpecHelper, CustomMatchers, JourneyDataMongoHelper}
 

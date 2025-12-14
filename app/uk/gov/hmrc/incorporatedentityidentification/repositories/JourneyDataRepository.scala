@@ -17,14 +17,11 @@
 package uk.gov.hmrc.incorporatedentityidentification.repositories
 
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.*
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model._
-
-import play.api.libs.json._
-
+import play.api.libs.json.*
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
-
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.*
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 

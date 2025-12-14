@@ -16,8 +16,8 @@
 
 package utils
 
+import assets.TestConstants.*
 import play.api.libs.json.{JsObject, Json}
-import assets.TestConstants._
 import uk.gov.hmrc.incorporatedentityidentification.models.Failure
 import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.RegistrationFailuresFormat
 

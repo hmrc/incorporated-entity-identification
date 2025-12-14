@@ -16,15 +16,15 @@
 
 package repositories
 
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
-import java.util.UUID
-
 import assets.TestConstants.{testInternalId, testJourneyId}
 import play.api.libs.json.{JsString, Json}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.*
 import utils.ComponentSpecHelper
+
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import java.util.UUID
 
 class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 

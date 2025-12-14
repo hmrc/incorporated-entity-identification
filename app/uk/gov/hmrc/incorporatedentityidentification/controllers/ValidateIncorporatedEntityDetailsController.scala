@@ -19,7 +19,7 @@ package uk.gov.hmrc.incorporatedentityidentification.controllers
 import play.api.libs.json.Json
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.incorporatedentityidentification.models._
+import uk.gov.hmrc.incorporatedentityidentification.models.*
 import uk.gov.hmrc.incorporatedentityidentification.services.ValidateIncorporatedEntityDetailsService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 

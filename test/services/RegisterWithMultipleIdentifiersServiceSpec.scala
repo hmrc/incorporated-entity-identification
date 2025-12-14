@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,26 @@
 package services
 
 import org.apache.pekko.actor.ActorSystem
-
-import org.mockito.scalatest.IdiomaticMockito
+import org.mockito.ArgumentMatchers.{any, eq as eqTo}
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.Configuration
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationNotCalled, RegistrationStatus}
+import uk.gov.hmrc.incorporatedentityidentification.models.*
 import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, RegisterWithMultipleIdentifiersService}
-
-import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.*
+import scala.concurrent.{Await, Future}
 
 class TestAppConfig(config: Configuration, servicesConfig: ServicesConfig) extends AppConfig(config, servicesConfig) {
 
@@ -53,12 +52,7 @@ class TestAppConfig(config: Configuration, servicesConfig: ServicesConfig) exten
 
 }
 
-class RegisterWithMultipleIdentifiersServiceSpec
-    extends AnyWordSpec
-    with Matchers
-    with IdiomaticMockito
-    with BeforeAndAfterAll
-    with GuiceOneAppPerSuite {
+class RegisterWithMultipleIdentifiersServiceSpec extends AnyWordSpec with Matchers with MockitoSugar with BeforeAndAfterAll with GuiceOneAppPerSuite {
 
   val actorSystem: ActorSystem = ActorSystem()
 
@@ -71,40 +65,24 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
     "handle an initial submission with neither registration status nor timestamp in the journey data" in new Setup {
 
-      mockJourneyDataService
-        .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-        .returns(Future.successful((None, None)))
+      givenExistingJourneyData(registrationStatus = None, timestamp = None)
+      givenStartNewRegistration()
+      givenRegisterLimitedCompanySuccess()
+      givenUpdateRegistrationStatusSuccess()
 
-      mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-      mockRegisterWithMultipleIdentifiersConnector
-        .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-        .returns(Future.successful(Registered(testSafeId)))
-
-      mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
-
-      val result: RegistrationStatus =
-        await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
+      val result: RegistrationStatus = await(callRegister())
 
       result mustBe Registered(testSafeId)
     }
 
     "handle an initial submission following a failed matching attempt" in new Setup {
 
-      mockJourneyDataService
-        .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-        .returns(Future.successful((Some(RegistrationNotCalled), None)))
+      givenExistingJourneyData(registrationStatus = Some(RegistrationNotCalled), timestamp = None)
+      givenStartNewRegistration()
+      givenRegisterLimitedCompanySuccess()
+      givenUpdateRegistrationStatusSuccess()
 
-      mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-      mockRegisterWithMultipleIdentifiersConnector
-        .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-        .returns(Future.successful(Registered(testSafeId)))
-
-      mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
-
-      val result: RegistrationStatus =
-        await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
+      val result: RegistrationStatus = await(callRegister())
 
       result mustBe Registered(testSafeId)
     }
@@ -113,24 +91,14 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the repeat submission arrives 100ms after the first submission" in new Setup {
 
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((None, Some(now))))
-
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
-
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
+        givenExistingJourneyData(registrationStatus = None, timestamp = Some(now))
+        givenStartNewRegistration()
+        givenRegisterLimitedCompanySuccess()
+        givenUpdateRegistrationStatusSuccess()
 
         Thread.sleep(100)
 
-        val result: RegistrationStatus = Await.result(
-          testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany),
-          2500.millis
-        )
+        val result: RegistrationStatus = Await.result(callRegister(), 2500.millis)
 
         result mustBe Registered(testSafeId)
 
@@ -139,24 +107,14 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the repeat submission arrives 1900ms after the first submission (i.e. just before the timeout)" in new Setup {
 
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
-
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
-
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((None, Some(now))))
+        givenStartNewRegistration()
+        givenRegisterLimitedCompanySuccess()
+        givenUpdateRegistrationStatusSuccess()
+        givenExistingJourneyData(registrationStatus = None, timestamp = Some(now))
 
         Thread.sleep(1900)
 
-        val result: RegistrationStatus = Await.result(
-          testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany),
-          2500.millis
-        )
+        val result: RegistrationStatus = Await.result(callRegister(), 2500.millis)
 
         result mustBe Registered(testSafeId)
 
@@ -180,10 +138,7 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
         Thread.sleep(100)
 
-        val result: RegistrationStatus = Await.result(
-          testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany),
-          2500.millis
-        )
+        val result: RegistrationStatus = Await.result(callRegister(), 2500.millis)
 
         result mustBe Registered(testSafeId)
 
@@ -192,24 +147,14 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the repeat submission arrives after the timeout" in new Setup {
 
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((None, Some(now))))
-
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
-
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
+        givenExistingJourneyData(registrationStatus = None, timestamp = Some(now))
+        givenStartNewRegistration()
+        givenRegisterLimitedCompanySuccess()
+        givenUpdateRegistrationStatusSuccess()
 
         Thread.sleep(2250)
 
-        val result: RegistrationStatus = Await.result(
-          testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany),
-          2500.millis
-        )
+        val result: RegistrationStatus = Await.result(callRegister(), 2500.millis)
 
         result mustBe Registered(testSafeId)
 
@@ -218,13 +163,9 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "an illegal registration state is detected" in new Setup {
 
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
-
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
+        givenStartNewRegistration()
+        givenRegisterLimitedCompanySuccess()
+        givenUpdateRegistrationStatusSuccess()
 
         when(mockJourneyDataService.retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))).thenReturn(
           Future.successful((None, Some(now))),
@@ -234,10 +175,7 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
         Thread.sleep(100)
 
-        val result: RegistrationStatus = Await.result(
-          testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany),
-          2500.millis
-        )
+        val result: RegistrationStatus = Await.result(callRegister(), 2500.millis)
 
         result mustBe Registered(testSafeId)
 
@@ -250,15 +188,11 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the registration status is defined as success, but the timestamp is not defined" in new Setup {
 
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((Some(Registered(testSafeId)), None)))
+        givenExistingJourneyData(registrationStatus = Some(Registered(testSafeId)), timestamp = None)
 
         val result: Either[Exception, RegistrationStatus] =
           try {
-            Right(
-              await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
-            )
+            Right(await(callRegister()))
           } catch {
             case ex: Exception => Left(ex)
           }
@@ -275,15 +209,11 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the registration status is defined as failed, but the timestamp is not defined" in new Setup {
 
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((Some(RegistrationFailed(Some(failures))), None)))
+        givenExistingJourneyData(registrationStatus = Some(RegistrationFailed(Some(failures))), timestamp = None)
 
         val result: Either[Exception, RegistrationStatus] =
           try {
-            Right(
-              await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
-            )
+            Right(await(callRegister()))
           } catch {
             case ex: Exception => Left(ex)
           }
@@ -304,16 +234,11 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the registration timeout has not expired" in new Setup {
 
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((Some(Registered(testSafeId)), Some(now))))
+        givenExistingJourneyData(registrationStatus = Some(Registered(testSafeId)), timestamp = Some(now))
 
         Thread.sleep(1000L)
 
-        val result: RegistrationStatus = Await.result(
-          testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany),
-          2500.millis
-        )
+        val result: RegistrationStatus = Await.result(callRegister(), 2500.millis)
 
         result mustBe Registered(testSafeId)
 
@@ -322,22 +247,14 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
       "the registration timeout has expired" in new Setup {
 
-        mockJourneyDataService
-          .retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId))
-          .returns(Future.successful((Some(Registered(testSafeId)), Some(now))))
-
-        mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]).returns(Future(true))
-
-        mockRegisterWithMultipleIdentifiersConnector
-          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(any[HeaderCarrier])
-          .returns(Future.successful(Registered(testSafeId)))
-
-        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId))).returns(Future(true))
+        givenExistingJourneyData(registrationStatus = Some(Registered(testSafeId)), timestamp = Some(now))
+        givenStartNewRegistration()
+        givenRegisterLimitedCompanySuccess()
+        givenUpdateRegistrationStatusSuccess()
 
         Thread.sleep(2500)
 
-        val result: RegistrationStatus =
-          await(testService.register(testJourneyId, testInternalId, testCompanyNumber, testCtUtr, testRegime, testService.registerLimitedCompany))
+        val result: RegistrationStatus = await(callRegister())
 
         result mustBe Registered(testSafeId)
 
@@ -380,6 +297,36 @@ class RegisterWithMultipleIdentifiersServiceSpec
 
     val failures: Array[Failure] = Array(Failure(invalidPayloadCode, invalidPayloadReason))
 
+    // --- helpers to remove duplication ---
+
+    def givenExistingJourneyData(registrationStatus: Option[RegistrationStatus], timestamp: Option[Instant]): Unit =
+      when(mockJourneyDataService.retrieveRegistrationStatusAndTimestamp(eqTo(testJourneyId), eqTo(testInternalId)))
+        .thenReturn(Future.successful((registrationStatus, timestamp)))
+
+    def givenStartNewRegistration(): Unit =
+      when(mockJourneyDataService.updateRegistrationTimestamp(eqTo(testJourneyId), eqTo(testInternalId), any[Instant]))
+        .thenReturn(Future(true))
+
+    def givenRegisterLimitedCompanySuccess(): Unit =
+      when(
+        mockRegisterWithMultipleIdentifiersConnector
+          .registerLimitedCompany(eqTo(testCompanyNumber), eqTo(testCtUtr), eqTo(testRegime))(using any[HeaderCarrier])
+      ).thenReturn(Future.successful(Registered(testSafeId)))
+
+    def givenUpdateRegistrationStatusSuccess(): Unit =
+      when(
+        mockJourneyDataService.updateRegistrationStatus(eqTo(testJourneyId), eqTo(testInternalId), eqTo(Registered(testSafeId)))
+      ).thenReturn(Future(true))
+
+    def callRegister(): Future[RegistrationStatus] =
+      testService.register(
+        testJourneyId,
+        testInternalId,
+        testCompanyNumber,
+        testCtUtr,
+        testRegime,
+        testService.registerLimitedCompany
+      )
   }
 
 }

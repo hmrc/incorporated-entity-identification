@@ -23,8 +23,9 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Writes
+import play.api.libs.ws.WSBodyWritables.writeableOf_String
 import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

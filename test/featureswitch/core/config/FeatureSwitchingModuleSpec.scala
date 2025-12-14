@@ -18,7 +18,6 @@ package featureswitch.core.config
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-
 import uk.gov.hmrc.incorporatedentityidentification.featureswitch.core.config.{DesStub, FeatureSwitchingModule, StubGetCtReference}
 
 class FeatureSwitchingModuleSpec extends AnyWordSpec with Matchers {

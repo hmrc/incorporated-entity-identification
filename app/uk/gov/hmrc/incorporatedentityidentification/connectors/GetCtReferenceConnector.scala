@@ -33,6 +33,6 @@ class GetCtReferenceConnector @Inject() (http: HttpClientV2, appConfig: AppConfi
       appConfig.desEnvironmentHeader
     )
 
-    http.get(url"${appConfig.getCtReferenceUrl(companyNumber)}").setHeader(extraHeaders: _*).execute[Either[HttpException, String]]
+    http.get(url"${appConfig.getCtReferenceUrl(companyNumber)}").setHeader(extraHeaders*).execute[Either[HttpException, String]]
   }
 }

@@ -16,19 +16,19 @@
 
 package utils
 
-import org.mongodb.scala.model._
+import org.mongodb.scala.SingleObservableFuture
+import org.mongodb.scala.model.*
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue, Json}
-import play.api.test.Helpers.{await, _}
-import uk.gov.hmrc.mongo.play.json.Codecs
+import play.api.libs.json.*
+import play.api.test.Helpers.{await, *}
 import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
-import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository._
+import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository.*
+import uk.gov.hmrc.mongo.play.json.Codecs
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 trait JourneyDataMongoHelper extends BeforeAndAfterEach {
   self: GuiceOneServerPerSuite with Suite =>

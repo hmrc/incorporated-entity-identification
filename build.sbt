@@ -1,27 +1,23 @@
 import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "3.7.4"
 
 val appName = "incorporated-entity-identification"
-
-val silencerVersion = "1.7.19"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
-    // ***************
-    // Use the silencer plugin to suppress warnings
-    scalacOptions += "-P:silencer:pathFilters=routes",
-    libraryDependencies ++= Seq(
-      compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
-    ),
-    // ***************
     scalafmtOnCompile := true
   )
   .settings(CodeCoverageSettings.settings *)
+
+scalacOptions ++= Seq(
+  "-Werror",
+  "-Wconf:src=routes/.*:s",
+  "-Wconf:msg=Flag.*repeatedly:s"
+)
 
 lazy val it = project
   .enablePlugins(PlayScala)

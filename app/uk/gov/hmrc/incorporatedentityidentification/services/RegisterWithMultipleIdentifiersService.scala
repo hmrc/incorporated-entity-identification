@@ -22,13 +22,13 @@ import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.incorporatedentityidentification.config.AppConfig
 import uk.gov.hmrc.incorporatedentityidentification.connectors.RegisterWithMultipleIdentifiersConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationNotCalled, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.models.error.{IllegalRegistrationStateError, IncorporatedEntityIdentificationError, RegistrationSubmissionRetryTimedOutError}
+import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationNotCalled, RegistrationStatus}
 
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
 
 @Singleton
 class RegisterWithMultipleIdentifiersService @Inject() (actorSystem: ActorSystem,
@@ -168,7 +168,7 @@ class RegisterWithMultipleIdentifiersService @Inject() (actorSystem: ActorSystem
       logger.warn(s"[VER-5038] Activating registration status retry mechanism with $retries attempts for journey $journeyId")
 
       val retrySubmission: Future[Either[IncorporatedEntityIdentificationError, RegistrationStatus]] = pekko.pattern
-        .retry(attempt = () => retryFunction(), attempts = retries, delay = registrationRetryInterval.millis)(ec, actorSystem.scheduler)
+        .retry(attempt = () => retryFunction(), attempts = retries, delay = registrationRetryInterval.millis)(using ec, actorSystem.scheduler)
 
       retrySubmission.flatMap {
         case Left(_) =>

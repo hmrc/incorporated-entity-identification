@@ -16,24 +16,25 @@
 
 package services
 
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
-
-import org.mockito.scalatest.{IdiomaticMockito, ResetMocksAfterEachTest}
+import org.mockito.ArgumentMatchers.eq as eqTo
+import org.mockito.Mockito.when
 import org.scalatest.Succeeded
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.{JsObject, JsString, Json}
-import play.api.test.Helpers._
-import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationFail, BusinessVerificationPass, CompanyProfile, Registered, RegistrationStatus}
-import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus._
+import play.api.test.Helpers.*
+import uk.gov.hmrc.incorporatedentityidentification.models.*
+import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus.*
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, JourneyIdGenerationService}
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMockito with ResetMocksAfterEachTest {
+class JourneyDataServiceSpec extends AnyWordSpec with Matchers with MockitoSugar {
   val mockJourneyDataRepository: JourneyDataRepository = mock[JourneyDataRepository]
   val mockJourneyIdGenerationService: JourneyIdGenerationService = mock[JourneyIdGenerationService]
 
@@ -65,35 +66,35 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
   val testCompleteJourneyData: String =
     s"""{
-      |"_id" : "$testJourneyId",
-      |"authInternalId" : "$testInternalId",
-      |"creationTimestamp" : "2024-12-05T11:09:11",
-      |"companyProfile" : {
-      |  "companyName" : "$testCompanyName",
-      |  "companyNumber" : "$testCompanyNumber",
-      |  "dateOfIncorporation" : "$testDateOfIncorporation",
-      |  "unsanitisedCHROAddress" :
-      |    { "address_line_1" : "$testAddressLine1",
-      |      "address_line_2" : "$testAddressLine2",
-      |      "care_of" : "$testCareOf",
-      |      "country" : "$testCountry",
-      |      "locality" : "$testLocality",
-      |      "po_box" : "$testPoBox",
-      |      "postal_code" : "$testPostalCode",
-      |      "premises" : "$testPremises",
-      |      "region" : "$testRegion"
-      |    }
-      |  },
-      |"ctutr" : "$testCtUtr",
-      | "identifiersMatch" : "DetailsMatched",
-      | "businessVerification" : {
-      |   "verificationStatus" : "$businessVerificationPassKey"
-      | },
-      |"registration" :
-      |  { "registrationStatus" : "REGISTERED",
-      |    "registeredBusinessPartnerId" : "$testSafeId"
-      |  }
-      |}""".stripMargin
+       |"_id" : "$testJourneyId",
+       |"authInternalId" : "$testInternalId",
+       |"creationTimestamp" : "2024-12-05T11:09:11",
+       |"companyProfile" : {
+       |  "companyName" : "$testCompanyName",
+       |  "companyNumber" : "$testCompanyNumber",
+       |  "dateOfIncorporation" : "$testDateOfIncorporation",
+       |  "unsanitisedCHROAddress" :
+       |    { "address_line_1" : "$testAddressLine1",
+       |      "address_line_2" : "$testAddressLine2",
+       |      "care_of" : "$testCareOf",
+       |      "country" : "$testCountry",
+       |      "locality" : "$testLocality",
+       |      "po_box" : "$testPoBox",
+       |      "postal_code" : "$testPostalCode",
+       |      "premises" : "$testPremises",
+       |      "region" : "$testRegion"
+       |    }
+       |  },
+       |"ctutr" : "$testCtUtr",
+       | "identifiersMatch" : "DetailsMatched",
+       | "businessVerification" : {
+       |   "verificationStatus" : "$businessVerificationPassKey"
+       | },
+       |"registration" :
+       |  { "registrationStatus" : "REGISTERED",
+       |    "registeredBusinessPartnerId" : "$testSafeId"
+       |  }
+       |}""".stripMargin
 
   val testFailedBusinessVerificationCompleteJourneyData: String =
     s"""{
@@ -394,8 +395,9 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
   "createJourney" should {
     "call to store a new journey with the generated journey ID" in {
-      mockJourneyIdGenerationService.generateJourneyId() returns testJourneyId
-      mockJourneyDataRepository.createJourney(eqTo(testJourneyId), eqTo(testInternalId)) returns Future.successful(testJourneyId)
+      when(mockJourneyIdGenerationService.generateJourneyId()).thenReturn(testJourneyId)
+      when(mockJourneyDataRepository.createJourney(eqTo(testJourneyId), eqTo(testInternalId)))
+        .thenReturn(Future.successful(testJourneyId))
 
       await(TestJourneyDataService.createJourney(testInternalId)) mustBe testJourneyId
     }
@@ -406,14 +408,16 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
       "the data exists in the database" in {
         val testJourneyData = Json.obj("testKey" -> "testValue")
 
-        mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+        when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+          .thenReturn(Future.successful(Some(testJourneyData)))
 
         await(TestJourneyDataService.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testJourneyData)
       }
     }
     "return None" when {
       "the data does not exist in the database" in {
-        mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+        when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+          .thenReturn(Future.successful(None))
 
         await(TestJourneyDataService.getJourneyData(testJourneyId, testInternalId)) mustBe None
       }
@@ -428,7 +432,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
         val testJourneyData = Json.obj(testKey -> testValue)
 
-        mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+        when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+          .thenReturn(Future.successful(Some(testJourneyData)))
 
         await(TestJourneyDataService.getJourneyDataByKey(testJourneyId, testKey, testInternalId)) mustBe Some(JsString(testValue))
 
@@ -438,7 +443,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
       "the data does not exist in the database" in {
         val testKey = "testKey"
 
-        mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+        when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+          .thenReturn(Future.successful(None))
 
         await(TestJourneyDataService.getJourneyDataByKey(testJourneyId, testKey, testInternalId)) mustBe None
       }
@@ -452,14 +458,16 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return true when the data field is successfully updated" in {
 
-      mockJourneyDataRepository.updateJourneyData(testJourneyId, testKey, testValue, testInternalId) returns Future.successful(true)
+      when(mockJourneyDataRepository.updateJourneyData(testJourneyId, testKey, testValue, testInternalId))
+        .thenReturn(Future.successful(true))
 
       await(TestJourneyDataService.updateJourneyData(testJourneyId, testKey, testValue, testInternalId)) mustBe true
     }
 
     "return false when an update fails" in {
 
-      mockJourneyDataRepository.updateJourneyData(testJourneyId, testKey, testValue, testInternalId) returns Future.successful(false)
+      when(mockJourneyDataRepository.updateJourneyData(testJourneyId, testKey, testValue, testInternalId))
+        .thenReturn(Future.successful(false))
 
       await(TestJourneyDataService.updateJourneyData(testJourneyId, testKey, testValue, testInternalId)) mustBe false
     }
@@ -471,14 +479,16 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return true when the data field is successfully removed" in {
 
-      mockJourneyDataRepository.removeJourneyDataField(testJourneyId, testInternalId, testKey) returns Future.successful(true)
+      when(mockJourneyDataRepository.removeJourneyDataField(testJourneyId, testInternalId, testKey))
+        .thenReturn(Future.successful(true))
 
       await(TestJourneyDataService.removeJourneyDataField(testJourneyId, testInternalId, testKey)) mustBe true
     }
 
     "return false if the data field is not successfully removed" in {
 
-      mockJourneyDataRepository.removeJourneyDataField(testJourneyId, testInternalId, testKey) returns Future.successful(false)
+      when(mockJourneyDataRepository.removeJourneyDataField(testJourneyId, testInternalId, testKey))
+        .thenReturn(Future.successful(false))
 
       await(TestJourneyDataService.removeJourneyDataField(testJourneyId, testInternalId, testKey)) mustBe false
     }
@@ -488,7 +498,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return true if the journey data is successfully removed" in {
 
-      mockJourneyDataRepository.removeJourneyData(testJourneyId, testInternalId) returns Future.successful(true)
+      when(mockJourneyDataRepository.removeJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(true))
 
       await(TestJourneyDataService.removeJourneyData(testJourneyId, testInternalId)) mustBe true
     }
@@ -498,25 +509,32 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "retrieve the business verification status from the journey data where the status is pass" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testCompleteJourneyDataAsJsObject)))
 
       await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe Some(BusinessVerificationPass)
     }
 
     "retrieve the business verification status from the journey data where the status is fail" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testFailedBusinessVerificationCompleteJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testFailedBusinessVerificationCompleteJourneyDataAsJsObject)
+          )
+        )
 
       await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe Some(BusinessVerificationFail)
     }
 
     "raise a DataAccessException if there is an error parsing the business verification status" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testInvalidBusinessVerificationStatusJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testInvalidBusinessVerificationStatusJourneyDataAsJsObject)
+          )
+        )
 
       await(
         TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId).failed.map { ex =>
@@ -529,16 +547,20 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none if the journey data does not contain the business verification status" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testMissingBusinessVerificationStatusJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testMissingBusinessVerificationStatusJourneyDataAsJsObject)
+          )
+        )
 
       await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe None
     }
 
     "return none if the journey data is not found" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(None))
 
       await(TestJourneyDataService.retrieveBusinessVerificationStatus(testJourneyId, testInternalId)) mustBe None
     }
@@ -548,7 +570,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return a company profile and Ct Utr when the journey data is fully defined" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testCompleteJourneyDataAsJsObject)))
 
       val result: (Option[CompanyProfile], Option[String]) =
         await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId))
@@ -564,9 +587,12 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "raise a DataAccessException if there is an error parsing the company profile" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testInvalidCompanyProfileJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testInvalidCompanyProfileJourneyDataAsJsObject)
+          )
+        )
 
       await(
         TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId).failed.map { ex =>
@@ -579,9 +605,12 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none for the company profile if the company profile is missing from the journey data" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testMissingCompanyProfileJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testMissingCompanyProfileJourneyDataAsJsObject)
+          )
+        )
 
       await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (None, Some(testCtUtr))
 
@@ -589,7 +618,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "raise a DataAccessException if there is an error parsing the Ct Utr" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testInvalidCtUtrJourneyDataAsJsObject))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testInvalidCtUtrJourneyDataAsJsObject)))
 
       await(
         TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId).failed.map { ex =>
@@ -602,7 +632,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none for the Ct Utr if the Ct Utr is missing from the journey data" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testMissingCtUtrJourneyDataAsJsObject))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testMissingCtUtrJourneyDataAsJsObject)))
 
       await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (Some(expectedCompanyProfile), None)
 
@@ -610,7 +641,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return None for both company profile and Ct Utr when the journey data is not found" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(None))
 
       await(TestJourneyDataService.retrieveCompanyProfileAndCtUtr(testJourneyId, testInternalId)) mustBe (None, None)
 
@@ -624,7 +656,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
       val testJourneyData: JsObject = testCompleteJourneyDataAsJsObject ++ registrationTimestampAsJsObject
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testJourneyData)))
 
       val result: (Option[RegistrationStatus], Option[Instant]) =
         await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
@@ -640,7 +673,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return the registration status only for complete journey data" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testCompleteJourneyDataAsJsObject)))
 
       val result: (Option[RegistrationStatus], Option[Instant]) =
         await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
@@ -656,7 +690,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
       val testJourneyData: JsObject = testMissingRegistrationStatusJourneyDataAsJsObject ++ registrationTimestampAsJsObject
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testJourneyData)))
 
       val result: (Option[RegistrationStatus], Option[Instant]) =
         await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
@@ -670,9 +705,12 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return neither registration status nor timestamp if they are missing from the journey data" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testMissingRegistrationStatusJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testMissingRegistrationStatusJourneyDataAsJsObject)
+          )
+        )
 
       val result: (Option[RegistrationStatus], Option[Instant]) =
         await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId))
@@ -686,9 +724,12 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "raise a DataAccessException if the registration status is invalid" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testInvalidRegistrationStatusJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testInvalidRegistrationStatusJourneyDataAsJsObject)
+          )
+        )
 
       await(
         TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId).failed.map { ex =>
@@ -703,7 +744,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
       val testJourneyData: JsObject = testCompleteJourneyDataAsJsObject ++ invalidRegistrationTimestampAsJsObject
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testJourneyData)))
 
       await(
         TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId).failed.map { ex =>
@@ -716,7 +758,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none for both registration status and timestamp when the journey data is not found" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(None))
 
       await(TestJourneyDataService.retrieveRegistrationStatusAndTimestamp(testJourneyId, testInternalId)) mustBe (None, None)
     }
@@ -729,7 +772,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
       val testJourneyData: JsObject = testCompleteJourneyDataAsJsObject ++ registrationTimestampAsJsObject
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testJourneyData))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testJourneyData)))
 
       val result: Option[Instant] = await(TestJourneyDataService.retrieveRegistrationTimestamp(testJourneyId, testInternalId))
 
@@ -742,7 +786,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none when the journey data is not found" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future(None)
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future(None))
 
       await(TestJourneyDataService.retrieveRegistrationTimestamp(testJourneyId, testInternalId)) mustBe None
     }
@@ -752,7 +797,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return the registration timestamp when it is present in the journey" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(Some(testCompleteJourneyDataAsJsObject))
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(Some(testCompleteJourneyDataAsJsObject)))
 
       val result: Option[RegistrationStatus] = await(TestJourneyDataService.retrieveRegistrationStatus(testJourneyId, testInternalId))
 
@@ -764,9 +810,12 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none when the journey data does not contain the registration status" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(
-        Some(testMissingRegistrationStatusJourneyDataAsJsObject)
-      )
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(
+          Future.successful(
+            Some(testMissingRegistrationStatusJourneyDataAsJsObject)
+          )
+        )
 
       val result: Option[RegistrationStatus] = await(TestJourneyDataService.retrieveRegistrationStatus(testJourneyId, testInternalId))
 
@@ -779,7 +828,8 @@ class JourneyDataServiceSpec extends AnyWordSpec with Matchers with IdiomaticMoc
 
     "return none when the journey data is not found" in {
 
-      mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId) returns Future.successful(None)
+      when(mockJourneyDataRepository.getJourneyData(testJourneyId, testInternalId))
+        .thenReturn(Future.successful(None))
 
       await(TestJourneyDataService.retrieveRegistrationStatus(testJourneyId, testInternalId)) mustBe None
     }
