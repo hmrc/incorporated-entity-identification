@@ -17,7 +17,6 @@
 package uk.gov.hmrc.incorporatedentityidentification.services
 
 import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
 
 @Singleton

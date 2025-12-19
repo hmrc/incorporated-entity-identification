@@ -19,9 +19,8 @@ package uk.gov.hmrc.incorporatedentityidentification.httpparsers
 import play.api.http.Status.OK
 import play.api.libs.json.{JsError, JsObject, JsSuccess}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse, InternalServerException}
-
-import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.RegistrationFailuresFormat
+import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationStatus}
 
 object RegisterWithMultipleIdentifiersHttpParser {
 

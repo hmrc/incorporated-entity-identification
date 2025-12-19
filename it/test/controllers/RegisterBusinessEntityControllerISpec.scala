@@ -16,18 +16,18 @@
 
 package controllers
 
-import assets.TestConstants._
+import assets.TestConstants.*
 import play.api.libs.json.{JsObject, Json}
-import play.api.test.Helpers._
-import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationNotCalled}
-import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus._
+import play.api.libs.ws.WSBodyReadables.readableAsString
+import play.api.test.Helpers.*
 import stubs.{AuthStub, RegisterWithMultipleIdentifiersStub}
+import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus.*
+import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationNotCalled}
 import utils.{ComponentSpecHelper, JourneyDataHelper, JourneyDataMongoHelper}
 
 import java.time.{Instant, OffsetDateTime, ZoneOffset}
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
-
 class RegisterBusinessEntityControllerISpec extends ComponentSpecHelper with AuthStub with JourneyDataMongoHelper with RegisterWithMultipleIdentifiersStub {
 
   val ec: ExecutionContext = ExecutionContext.global

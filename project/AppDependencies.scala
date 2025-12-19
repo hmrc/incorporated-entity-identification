@@ -3,8 +3,8 @@ import sbt.*
 
 object AppDependencies {
 
-  val bootStrapVersion: String = "10.1.0"
-  val mongoVersion: String = "2.7.0"
+  val bootStrapVersion: String = "10.4.0"
+  val mongoVersion: String = "2.11.0"
 
   val compile = Seq(
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootStrapVersion,
@@ -14,14 +14,13 @@ object AppDependencies {
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"       %% "bootstrap-test-play-30"   % bootStrapVersion,
     "org.playframework" %% "play-test"                % PlayVersion.current,
-    "org.mockito"       %% "mockito-scala"            % "2.0.0",
-    "org.mockito"       %% "mockito-scala-scalatest"  % "2.0.0",
+    "org.scalatestplus" %% "mockito-4-11"             % "3.2.18.0",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30"  % mongoVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.19.2"
   ).map(_ % "test")
 
   val it: Seq[ModuleID] = Seq(
-    "com.github.tomakehurst" % "wiremock" % "3.0.1"
+    "com.github.tomakehurst" % "wiremock" % "3.8.0"
   ).map(_ % "test")
 
 }

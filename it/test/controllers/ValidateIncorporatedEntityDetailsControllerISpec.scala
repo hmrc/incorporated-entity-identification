@@ -16,11 +16,11 @@
 
 package controllers
 
-import assets.TestConstants._
+import assets.TestConstants.*
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, getRequestedFor, okJson, urlPathEqualTo, urlPathMatching}
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import play.api.libs.json.Json
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import stubs.{AuthStub, GetCtReferenceStub}
 import utils.ComponentSpecHelper
 

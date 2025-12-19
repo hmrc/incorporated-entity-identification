@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.services
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 import uk.gov.hmrc.incorporatedentityidentification.connectors.GetCtReferenceConnector
-import uk.gov.hmrc.incorporatedentityidentification.models.{DetailsDownstreamError, DetailsMatched, DetailsMismatched, DetailsNotFound, IncorporatedEntityDetailsValidationResult}
+import uk.gov.hmrc.incorporatedentityidentification.models.*
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
 case class CompanyProfile(companyName: String, companyNumber: String, dateOfIncorporation: Option[String], unsanitisedCHROAddress: JsObject)
 

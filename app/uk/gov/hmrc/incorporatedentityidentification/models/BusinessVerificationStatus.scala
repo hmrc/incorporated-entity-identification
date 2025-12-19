@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 
 sealed trait BusinessVerificationStatus
 

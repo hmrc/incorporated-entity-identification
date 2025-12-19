@@ -19,8 +19,8 @@ package models
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
-import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationFail, BusinessVerificationNotEnoughInformationToCallBV, BusinessVerificationNotEnoughInformationToChallenge, BusinessVerificationPass, BusinessVerificationStatus, CtEnrolled}
-import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus._
+import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus.*
+import uk.gov.hmrc.incorporatedentityidentification.models.*
 
 class BusinessVerificationStatusSpec extends AnyWordSpec with Matchers {
 

@@ -18,12 +18,11 @@ package uk.gov.hmrc.incorporatedentityidentification.controllers
 
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents, Result}
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
-import uk.gov.hmrc.incorporatedentityidentification.models._
-import uk.gov.hmrc.incorporatedentityidentification.models.{Registered, RegistrationFailed}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.RegistrationFailuresFormat
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
+import uk.gov.hmrc.incorporatedentityidentification.models.*
 import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, RegisterWithMultipleIdentifiersService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 

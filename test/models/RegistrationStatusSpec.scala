@@ -18,8 +18,8 @@ package models
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsError, JsNumber, JsSuccess, JsValue, Json}
-import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationNotCalled, RegistrationStatus}
+import play.api.libs.json.*
+import uk.gov.hmrc.incorporatedentityidentification.models.*
 
 class RegistrationStatusSpec extends AnyWordSpec with Matchers {
 

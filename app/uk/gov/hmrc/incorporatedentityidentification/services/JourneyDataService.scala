@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.incorporatedentityidentification.services
 
-import play.api.libs.json.{JsError, JsObject, JsSuccess, JsValue, Json}
-import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationStatus, CompanyProfile, RegistrationStatus}
+import play.api.libs.json.*
 import uk.gov.hmrc.incorporatedentityidentification.models.BusinessVerificationStatus.reads
 import uk.gov.hmrc.incorporatedentityidentification.models.RegistrationStatus.format
 import uk.gov.hmrc.incorporatedentityidentification.models.error.DataAccessException
+import uk.gov.hmrc.incorporatedentityidentification.models.{BusinessVerificationStatus, CompanyProfile, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 
 import java.time.Instant

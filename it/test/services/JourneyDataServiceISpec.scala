@@ -16,14 +16,14 @@
 
 package services
 
-import java.time.{Instant, OffsetDateTime, ZoneOffset}
-import play.api.test.Helpers._
-import assets.TestConstants.{testInternalId, testInvalidPayloadCode, testInvalidPayloadReason, testInvalidRegimeCode, testInvalidRegimePayload, testJourneyId, testSafeId}
+import assets.TestConstants.*
+import play.api.test.Helpers.*
 import uk.gov.hmrc.incorporatedentityidentification.models.{Failure, Registered, RegistrationFailed, RegistrationStatus}
 import uk.gov.hmrc.incorporatedentityidentification.repositories.JourneyDataRepository
 import uk.gov.hmrc.incorporatedentityidentification.services.{JourneyDataService, JourneyIdGenerationService}
 import utils.ComponentSpecHelper
 
+import java.time.{Instant, OffsetDateTime, ZoneOffset}
 import scala.concurrent.ExecutionContext.global
 
 class JourneyDataServiceISpec extends ComponentSpecHelper {
