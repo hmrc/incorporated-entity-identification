@@ -160,5 +160,11 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
     "7827727070" -> "XQ0000100278758"
   )
 
-  lazy private val e2eTestData: Map[String, String] = plasticPackagingTaxData ++ atsData
+  lazy private val mmtarData: Map[String, String] = Map(
+    // Limited Companies
+    "2177020877" -> "XW0000100081591", // Limited Company 1 - CRN 00048839
+    "2220316180" -> "XX0000100083060"  // Limited Company 2 - CRN NI043769 (Bppt-awrs-180)
+  )
+
+  lazy private val e2eTestData: Map[String, String] = plasticPackagingTaxData ++ atsData ++ mmtarData
 }
