@@ -163,8 +163,15 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
   lazy private val mmtarData: Map[String, String] = Map(
     // Limited Companies
     "2177020877" -> "XW0000100081591", // Limited Company 1 - CRN 00048839
-    "2220316180" -> "XX0000100083060"  // Limited Company 2 - CRN NI043769 (Bppt-awrs-180)
+    "2220316180" -> "XX0000100083060" // Limited Company 2 - CRN NI043769 (Bppt-awrs-180)
   )
 
-  lazy private val e2eTestData: Map[String, String] = plasticPackagingTaxData ++ atsData ++ mmtarData
+  lazy private val grsData: Map[String, String] = Map(
+    // GRS DSAO Test Data
+    "5891509292" -> "100082660", // CRN 70669626
+    "2867418424" -> "100083438", // CRN 70669527
+    "3497417436" -> "100083452" // CRN 70699549
+  )
+
+  lazy private val e2eTestData: Map[String, String] = plasticPackagingTaxData ++ atsData ++ mmtarData ++ grsData
 }

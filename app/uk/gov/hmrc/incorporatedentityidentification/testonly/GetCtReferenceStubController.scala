@@ -49,11 +49,17 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     }
   }
 
-  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ atsTestData ++ mmtarTestData
+  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ atsTestData ++ mmtarTestData ++ grsTestData
 
   private val mmtarTestData: Map[String, String] = Map(
     "00048839" -> "2177020877", // Limited Company 1
-    "NI043769" -> "2220316180"  // Limited Company 2
+    "NI043769" -> "2220316180" // Limited Company 2
+  )
+
+  private val grsTestData: Map[String, String] = Map(
+    "70669626" -> "5891509292", // GRS Test Data 1
+    "70669527" -> "2867418424", // GRS Test Data 2
+    "70699549" -> "3497417436" // GRS Test Data 3
   )
 
   private val plasticTaxTestData: Map[String, String] = Map(
