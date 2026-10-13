@@ -126,7 +126,7 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
     "100460185" -> "XW0000100460185",
     "100401130" -> "XE0000100401130",
     "100460187" -> "XB0000100460187",
-    //limited partnership
+    //Limited partnership
     "7896587333" -> "XV0000100082619",
     "7896587487" -> "XZ0000100293393",
     "9658745781" -> "XX0000100293430",
@@ -136,7 +136,7 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
     "2177016525" -> "XF0000100373890",
     "8186908440" -> "XA0000100485598",
     "2380087809" -> "XC0000100490592",
-    //individual
+    //Individual
     "1167098481" -> "XZ0000100028583",
     "7858768798" -> "XF0000100049820",
     "1234567891" -> "XX0000100050766",
@@ -167,7 +167,7 @@ class RegisterWithMultipleIdentifiersStubController @Inject() (controllerCompone
     "2917695478" -> "XZ0000100028221",
     "7300226664" -> "XV0000100028851",
     "4300226660" -> "XA0000100028861",
-    //sole trader
+    //Sole trader
     "1167098481" -> "XZ0000100028583",
     "2112236944" -> "XH0000100030526",
     //Reg Scot
