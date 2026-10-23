@@ -23,7 +23,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class GetCtReferenceStubController @Inject() (controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
+class GetCtReferenceStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   def getCtReference(companyNumber: String): Action[AnyContent] = Action {
     companyNumber match {
@@ -49,7 +49,7 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     }
   }
 
-  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ atsTestData ++ mmtarTestData ++ grsTestData
+  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ eclTestData ++ atsTestData ++ mmtarTestData ++ grsTestData
 
   private val mmtarTestData: Map[String, String] = Map(
     "00048839" -> "2177020877", // Limited Company 1
@@ -109,17 +109,17 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "23456936" -> "8177015384",
     "23456937" -> "9177001494",
     "CRN08444" -> "3300555807",
-    "9870551"  -> "8177017961",
-    "9870552"  -> "9177021920",
-    "9870553"  -> "6177009072",
+    "9870551" -> "8177017961",
+    "9870552" -> "9177021920",
+    "9870553" -> "6177009072",
     "76543219" -> "1220316477",
     "76543220" -> "1220316476",
     "76543225" -> "9220316469",
     "36123619" -> "6220316448",
-    "9870562"  -> "7107807868",
-    "9870563"  -> "1220316446",
-    "9870564"  -> "7127001773",
-    "9870565"  -> "7161525510",
+    "9870562" -> "7107807868",
+    "9870563" -> "1220316446",
+    "9870564" -> "7127001773",
+    "9870565" -> "7161525510",
     //New Data Added
     "3007944" -> "2695871143",
     "17012019" -> "1618806439",
@@ -143,6 +143,40 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "98765429" -> "2630076230"
   )
 
+  private val eclTestData: Map[String, String] = Map(
+    "73898978" -> "1834243740",
+    "91000060" -> "3202108035",
+    "91000061" -> "5202108034",
+    "91000062" -> "7202108033",
+    "11113300" -> "2624148721",
+    "70669613" -> "1220316459",
+    "70669619" -> "2220316453",
+    "70661565" -> "4531021577",
+    "70669624" -> "2177016525",
+    "70669646" -> "3289128116",
+    "8100210" -> "1006014692",
+    "70661560" -> "2745021552",
+    "70661561" -> "2989303592",
+    "8100112" -> "1000303040",
+    "12356781" -> "1121118001",
+    "70661581" -> "8232102698",
+    "70669656" -> "9219901037",
+    "70669641" -> "4464805151",
+    "70669555" -> "5177009503",
+    "33024781" -> "5715708037",
+    "97757548" -> "1144442619",
+    "8100059" -> "6177013474",
+    "58300022" -> "1258310333",
+    "58300009" -> "7458310222",
+    "22222243" -> "1123456973",
+    "70669654" -> "6494114930",
+    "6568974" -> "9562356894",
+    "32015214" -> "7325577872",
+    "63200123" -> "8052001236",
+    "70669646" -> "3289128116",
+    "65987589" -> "9564879856"
+  )
+
   private val atsTestData: Map[String, String] = Map(
     "66778899" -> "1004481479",
     "88990011" -> "8899001122",
@@ -152,7 +186,7 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "77431891" -> "8800431891",
     "80431887" -> "9100431887",
     "77431880" -> "8800431880",
-    "34561"    -> "2203405620",
+    "34561" -> "2203405620",
     "12345610" -> "1962476745",
     "23165475" -> "1140236788",
     "45582365" -> "7144440039",
@@ -161,7 +195,7 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "31757555" -> "2187647873",
     "12575555" -> "1113456543",
     "23456789" -> "4111112233",
-    "8000005"  -> "9737040035",
+    "8000005" -> "9737040035",
     "34567890" -> "5177018487",
     "79939352" -> "9882912946",
     "94849225" -> "1087915528",
@@ -171,7 +205,7 @@ class GetCtReferenceStubController @Inject() (controllerComponents: ControllerCo
     "54936458" -> "3481282169",
     "41552412" -> "1003744109",
     "99008844" -> "9900883464",
-    "6568974"  -> "9562356894",
+    "6568974" -> "9562356894",
     "56987421" -> "4569875412",
     "10028368" -> "1002836857",
     "99912300" -> "9933110010",
