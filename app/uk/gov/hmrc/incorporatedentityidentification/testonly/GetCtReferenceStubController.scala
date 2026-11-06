@@ -23,7 +23,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class GetCtReferenceStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
+class GetCtReferenceStubController @Inject() (controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   def getCtReference(companyNumber: String): Action[AnyContent] = Action {
     companyNumber match {
@@ -49,17 +49,39 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     }
   }
 
-  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ eclTestData ++ atsTestData ++ mmtarTestData ++ grsTestData
+  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ eclTestData ++ atsTestData ++ mmtarTestData ++ saoTestData
 
   private val mmtarTestData: Map[String, String] = Map(
     "00048839" -> "2177020877", // Limited Company 1
     "NI043769" -> "2220316180" // Limited Company 2
   )
 
-  private val grsTestData: Map[String, String] = Map(
-    "70669626" -> "5891509292", // GRS Test Data 1
-    "70669527" -> "2867418424", // GRS Test Data 2
-    "70699549" -> "3497417436" // GRS Test Data 3
+  private val saoTestData: Map[String, String] = Map(
+    "70669626" -> "5891509292",
+    "70669527" -> "2867418424",
+    "70699549" -> "3497417436",
+    "98704423" -> "2220316436",
+    "98704424" -> "4220316435",
+    "98704425" -> "6220316434",
+    "98704426" -> "8220316433",
+    "98704427" -> "1220316432",
+    "98704428" -> "1220316431",
+    "98704429" -> "3220316430",
+    "33958869" -> "7321867711",
+    "33958867" -> "7220316361",
+    "50115053" -> "2220316193",
+    "50115054" -> "4220316192",
+    "50115055" -> "6220316191",
+    "DS100511" -> "1303229745",
+    "DS100512" -> "1318803439",
+    "DS100513" -> "1325400121",
+    "DS100514" -> "1327603528",
+    "DS100515" -> "1338127469",
+    "DS100516" -> "3300918242",
+    "DS100517" -> "3300918256",
+    "DS100518" -> "8300918262",
+    "DS100519" -> "7300918285",
+    "DS100520" -> "4300918300"
   )
 
   private val plasticTaxTestData: Map[String, String] = Map(
@@ -109,19 +131,19 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "23456936" -> "8177015384",
     "23456937" -> "9177001494",
     "CRN08444" -> "3300555807",
-    "9870551" -> "8177017961",
-    "9870552" -> "9177021920",
-    "9870553" -> "6177009072",
+    "9870551"  -> "8177017961",
+    "9870552"  -> "9177021920",
+    "9870553"  -> "6177009072",
     "76543219" -> "1220316477",
     "76543220" -> "1220316476",
     "76543225" -> "9220316469",
     "36123619" -> "6220316448",
-    "9870562" -> "7107807868",
-    "9870563" -> "1220316446",
-    "9870564" -> "7127001773",
-    "9870565" -> "7161525510",
-    //New Data Added
-    "3007944" -> "2695871143",
+    "9870562"  -> "7107807868",
+    "9870563"  -> "1220316446",
+    "9870564"  -> "7127001773",
+    "9870565"  -> "7161525510",
+    // New Data Added
+    "3007944"  -> "2695871143",
     "17012019" -> "1618806439",
     "90452621" -> "7202108212",
     "10357216" -> "1202110092",
@@ -129,7 +151,7 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "91000052" -> "6202107246",
     "55844338" -> "9912349786",
     "CRN90801" -> "6669004001",
-    "9468993" -> "6891612859",
+    "9468993"  -> "6891612859",
     "77023583" -> "8800023583",
     "50113311" -> "2917695478",
     "68727864" -> "7300226664",
@@ -154,10 +176,10 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "70661565" -> "4531021577",
     "70669624" -> "2177016525",
     "70669646" -> "3289128116",
-    "8100210" -> "1006014692",
+    "8100210"  -> "1006014692",
     "70661560" -> "2745021552",
     "70661561" -> "2989303592",
-    "8100112" -> "1000303040",
+    "8100112"  -> "1000303040",
     "12356781" -> "1121118001",
     "70661581" -> "8232102698",
     "70669656" -> "9219901037",
@@ -165,12 +187,12 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "70669555" -> "5177009503",
     "33024781" -> "5715708037",
     "97757548" -> "1144442619",
-    "8100059" -> "6177013474",
+    "8100059"  -> "6177013474",
     "58300022" -> "1258310333",
     "58300009" -> "7458310222",
     "22222243" -> "1123456973",
     "70669654" -> "6494114930",
-    "6568974" -> "9562356894",
+    "6568974"  -> "9562356894",
     "32015214" -> "7325577872",
     "63200123" -> "8052001236",
     "70669646" -> "3289128116",
@@ -186,7 +208,7 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "77431891" -> "8800431891",
     "80431887" -> "9100431887",
     "77431880" -> "8800431880",
-    "34561" -> "2203405620",
+    "34561"    -> "2203405620",
     "12345610" -> "1962476745",
     "23165475" -> "1140236788",
     "45582365" -> "7144440039",
@@ -195,7 +217,7 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "31757555" -> "2187647873",
     "12575555" -> "1113456543",
     "23456789" -> "4111112233",
-    "8000005" -> "9737040035",
+    "8000005"  -> "9737040035",
     "34567890" -> "5177018487",
     "79939352" -> "9882912946",
     "94849225" -> "1087915528",
@@ -205,7 +227,7 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     "54936458" -> "3481282169",
     "41552412" -> "1003744109",
     "99008844" -> "9900883464",
-    "6568974" -> "9562356894",
+    "6568974"  -> "9562356894",
     "56987421" -> "4569875412",
     "10028368" -> "1002836857",
     "99912300" -> "9933110010",
