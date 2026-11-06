@@ -49,17 +49,39 @@ class GetCtReferenceStubController @Inject()(controllerComponents: ControllerCom
     }
   }
 
-  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ eclTestData ++ atsTestData ++ mmtarTestData ++ grsTestData
+  lazy val e2eTestData: Map[String, String] = plasticTaxTestData ++ eclTestData ++ atsTestData ++ mmtarTestData ++ saoTestData
 
   private val mmtarTestData: Map[String, String] = Map(
     "00048839" -> "2177020877", // Limited Company 1
     "NI043769" -> "2220316180" // Limited Company 2
   )
 
-  private val grsTestData: Map[String, String] = Map(
-    "70669626" -> "5891509292", // GRS Test Data 1
-    "70669527" -> "2867418424", // GRS Test Data 2
-    "70699549" -> "3497417436" // GRS Test Data 3
+  private val saoTestData: Map[String, String] = Map(
+    "70669626" -> "5891509292",
+    "70669527" -> "2867418424",
+    "70699549" -> "3497417436",
+    "98704423" -> "2220316436",
+    "98704424" -> "4220316435",
+    "98704425" -> "6220316434",
+    "98704426" -> "8220316433",
+    "98704427" -> "1220316432",
+    "98704428" -> "1220316431",
+    "98704429" -> "3220316430",
+    "33958869" -> "7321867711",
+    "33958867" -> "7220316361",
+    "50115053" -> "2220316193",
+    "50115054" -> "4220316192",
+    "50115055" -> "6220316191",
+    "DS100511" -> "1303229745",
+    "DS100512" -> "1318803439",
+    "DS100513" -> "1325400121",
+    "DS100514" -> "1327603528",
+    "DS100515" -> "1338127469",
+    "DS100516" -> "3300918242",
+    "DS100517" -> "3300918256",
+    "DS100518" -> "8300918262",
+    "DS100519" -> "7300918285",
+    "DS100520" -> "4300918300"
   )
 
   private val plasticTaxTestData: Map[String, String] = Map(
